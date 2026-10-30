@@ -1,0 +1,21 @@
+import XCTest
+import ForgeCheckSupport
+
+final class ForgeCoreTests: XCTestCase {
+    func testBundledCurriculumHasCompleteLearningPath() throws { try ForgeCoreChecks.run("testBundledCurriculumHasCompleteLearningPath") }
+    func testNewStoreIsEmptyWithoutCreatingFile() throws { try ForgeCoreChecks.run("testNewStoreIsEmptyWithoutCreatingFile") }
+    func testProgressSurvivesNewStoreInstanceAndBackupRoundTrip() throws { try ForgeCoreChecks.run("testProgressSurvivesNewStoreInstanceAndBackupRoundTrip") }
+    func testImportOnlyValidatesUntilUserChoosesToRestore() throws { try ForgeCoreChecks.run("testImportOnlyValidatesUntilUserChoosesToRestore") }
+    func testMalformedAndTruncatedBackupsAreRejected() throws { try ForgeCoreChecks.run("testMalformedAndTruncatedBackupsAreRejected") }
+    func testUnknownVersionsAndModuleIDsAreRejected() throws { try ForgeCoreChecks.run("testUnknownVersionsAndModuleIDsAreRejected") }
+    func testSessionDurationAndDuplicateIDsAreValidated() throws { try ForgeCoreChecks.run("testSessionDurationAndDuplicateIDsAreValidated") }
+    func testInvalidSessionDatesAreRejected() throws { try ForgeCoreChecks.run("testInvalidSessionDatesAreRejected") }
+    func testTextLimitsCountUTF8Bytes() throws { try ForgeCoreChecks.run("testTextLimitsCountUTF8Bytes") }
+    func testOversizedBackupRejectedBeforeDecoding() throws { try ForgeCoreChecks.run("testOversizedBackupRejectedBeforeDecoding") }
+    func testInvalidSavePreservesPreviousSnapshotBytes() throws { try ForgeCoreChecks.run("testInvalidSavePreservesPreviousSnapshotBytes") }
+    func testDamagedFileIsPreservedAndNotSilentlyReset() throws { try ForgeCoreChecks.run("testDamagedFileIsPreservedAndNotSilentlyReset") }
+    func testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup() throws { try ForgeCoreChecks.run("testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup") }
+    func testInvalidRecoveryDoesNotTouchExistingData() throws { try ForgeCoreChecks.run("testInvalidRecoveryDoesNotTouchExistingData") }
+    func testReadOnlyDestinationFailsWithoutReportingSuccess() throws { try ForgeCoreChecks.run("testReadOnlyDestinationFailsWithoutReportingSuccess") }
+    func testCalendarTotalsUseLearnersTimezone() throws { try ForgeCoreChecks.run("testCalendarTotalsUseLearnersTimezone") }
+}

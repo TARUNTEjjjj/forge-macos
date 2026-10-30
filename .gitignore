@@ -1,0 +1,16 @@
+.build/
+build/
+.swiftpm/
+.DS_Store
+xcuserdata/
+*.xcuserstate
+*.xcarchive
+*.ipa
+*.pkg
+*.dmg
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile
+.env*
+.dev.vars*

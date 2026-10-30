@@ -1,0 +1,276 @@
+import Foundation
+import ForgeCore
+
+public enum ForgeCoreChecks {
+    public static let names: [String] = [
+        "testBundledCurriculumHasCompleteLearningPath",
+        "testNewStoreIsEmptyWithoutCreatingFile",
+        "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip",
+        "testImportOnlyValidatesUntilUserChoosesToRestore",
+        "testMalformedAndTruncatedBackupsAreRejected",
+        "testUnknownVersionsAndModuleIDsAreRejected",
+        "testSessionDurationAndDuplicateIDsAreValidated",
+        "testInvalidSessionDatesAreRejected",
+        "testTextLimitsCountUTF8Bytes",
+        "testOversizedBackupRejectedBeforeDecoding",
+        "testInvalidSavePreservesPreviousSnapshotBytes",
+        "testDamagedFileIsPreservedAndNotSilentlyReset",
+        "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup",
+        "testInvalidRecoveryDoesNotTouchExistingData",
+        "testReadOnlyDestinationFailsWithoutReportingSuccess",
+        "testCalendarTotalsUseLearnersTimezone"
+]
+
+    public static func run(_ name: String) throws {
+        let cases = CoreCases()
+        try cases.setUpWithError()
+        defer { try? cases.tearDownWithError() }
+        switch name {
+        case "testBundledCurriculumHasCompleteLearningPath": try cases.testBundledCurriculumHasCompleteLearningPath()
+        case "testNewStoreIsEmptyWithoutCreatingFile": try cases.testNewStoreIsEmptyWithoutCreatingFile()
+        case "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip": try cases.testProgressSurvivesNewStoreInstanceAndBackupRoundTrip()
+        case "testImportOnlyValidatesUntilUserChoosesToRestore": try cases.testImportOnlyValidatesUntilUserChoosesToRestore()
+        case "testMalformedAndTruncatedBackupsAreRejected": try cases.testMalformedAndTruncatedBackupsAreRejected()
+        case "testUnknownVersionsAndModuleIDsAreRejected": try cases.testUnknownVersionsAndModuleIDsAreRejected()
+        case "testSessionDurationAndDuplicateIDsAreValidated": try cases.testSessionDurationAndDuplicateIDsAreValidated()
+        case "testInvalidSessionDatesAreRejected": try cases.testInvalidSessionDatesAreRejected()
+        case "testTextLimitsCountUTF8Bytes": try cases.testTextLimitsCountUTF8Bytes()
+        case "testOversizedBackupRejectedBeforeDecoding": try cases.testOversizedBackupRejectedBeforeDecoding()
+        case "testInvalidSavePreservesPreviousSnapshotBytes": try cases.testInvalidSavePreservesPreviousSnapshotBytes()
+        case "testDamagedFileIsPreservedAndNotSilentlyReset": try cases.testDamagedFileIsPreservedAndNotSilentlyReset()
+        case "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup": try cases.testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup()
+        case "testInvalidRecoveryDoesNotTouchExistingData": try cases.testInvalidRecoveryDoesNotTouchExistingData()
+        case "testReadOnlyDestinationFailsWithoutReportingSuccess": try cases.testReadOnlyDestinationFailsWithoutReportingSuccess()
+        case "testCalendarTotalsUseLearnersTimezone": try cases.testCalendarTotalsUseLearnersTimezone()
+        default: throw CheckFailure(description: "Unknown check: \(name)")
+        }
+    }
+}
+
+private struct CheckFailure: Error, CustomStringConvertible {
+    let description: String
+}
+
+private func XCTAssertEqual<T: Equatable>(_ lhs: @autoclosure () throws -> T,
+                                         _ rhs: @autoclosure () throws -> T,
+                                         file: StaticString = #filePath, line: UInt = #line) throws {
+    let left = try lhs(), right = try rhs()
+    guard left == right else { throw CheckFailure(description: "Expected equal values at \(file):\(line)") }
+}
+
+private func XCTAssertTrue(_ value: @autoclosure () throws -> Bool,
+                           file: StaticString = #filePath, line: UInt = #line) throws {
+    guard try value() else { throw CheckFailure(description: "Expected true at \(file):\(line)") }
+}
+
+private func XCTAssertFalse(_ value: @autoclosure () throws -> Bool,
+                            file: StaticString = #filePath, line: UInt = #line) throws {
+    guard try !value() else { throw CheckFailure(description: "Expected false at \(file):\(line)") }
+}
+
+private func XCTAssertThrowsError<T>(_ expression: @autoclosure () throws -> T,
+                                    _ verify: ((Error) throws -> Void)? = nil,
+                                    file: StaticString = #filePath, line: UInt = #line) throws {
+    do { _ = try expression() }
+    catch { try verify?(error); return }
+    throw CheckFailure(description: "Expected an error at \(file):\(line)")
+}
+
+private func XCTAssertNoThrow<T>(_ expression: @autoclosure () throws -> T) throws {
+    _ = try expression()
+}
+
+private func XCTUnwrap<T>(_ value: T?) throws -> T {
+    guard let value else { throw CheckFailure(description: "Unexpected nil") }
+    return value
+}
+
+private final class CoreCases {
+    private var directory: URL!
+    private var store: ProgressFileStore!
+
+    func setUpWithError() throws {
+        directory = FileManager.default.temporaryDirectory.appendingPathComponent("ForgeCoreTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        store = ProgressFileStore(fileURL: directory.appendingPathComponent("nested/progress.json"),
+                                  allowedModuleIDs: try Curriculum.loadBundled().moduleIDs)
+    }
+
+    func tearDownWithError() throws {
+        if let directory { try FileManager.default.removeItem(at: directory) }
+    }
+
+    func testBundledCurriculumHasCompleteLearningPath() throws {
+        let curriculum = try Curriculum.loadBundled()
+        try XCTAssertEqual(curriculum.phases.count, 10)
+        try XCTAssertEqual(curriculum.modules.count, 50)
+        try XCTAssertEqual(curriculum.moduleIDs.count, 50)
+        try XCTAssertEqual(curriculum.totalHours, 2_000)
+        try XCTAssertEqual(curriculum.modules.reduce(0) { $0 + $1.hours }, 2_000)
+        try XCTAssertEqual(curriculum.problems.count, 36)
+        try XCTAssertTrue(curriculum.modules.allSatisfy { !$0.task.isEmpty && !$0.successCriteria.isEmpty })
+        try XCTAssertTrue(curriculum.resources.allSatisfy { $0.url.scheme == "https" })
+    }
+
+    func testNewStoreIsEmptyWithoutCreatingFile() throws {
+        try XCTAssertEqual(try store.load(), ProgressSnapshot())
+        try XCTAssertFalse(FileManager.default.fileExists(atPath: store.fileURL.path))
+    }
+
+    func testProgressSurvivesNewStoreInstanceAndBackupRoundTrip() throws {
+        let original = sampleSnapshot()
+        try store.save(original)
+        let restarted = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        try XCTAssertEqual(try restarted.load(), original)
+        let exported = try restarted.exportData(original)
+        try XCTAssertEqual(try restarted.importData(exported), original)
+    }
+
+    func testImportOnlyValidatesUntilUserChoosesToRestore() throws {
+        let original = sampleSnapshot()
+        let data = try store.exportData(original)
+        try XCTAssertEqual(try store.importData(data), original)
+        try XCTAssertFalse(FileManager.default.fileExists(atPath: store.fileURL.path))
+    }
+
+    func testMalformedAndTruncatedBackupsAreRejected() throws {
+        for data in [Data(), Data("{}".utf8), Data("{\"version\":1".utf8), Data("[]".utf8)] {
+            try XCTAssertThrowsError(try store.importData(data)) { try XCTAssertEqual($0 as? ProgressError, .invalidBackup) }
+        }
+    }
+
+    func testUnknownVersionsAndModuleIDsAreRejected() throws {
+        var snapshot = sampleSnapshot()
+        snapshot.version = 99
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .unsupportedVersion) }
+        snapshot.version = 1
+        snapshot.completedModuleIDs.insert("not-a-lesson")
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidModule) }
+        snapshot = sampleSnapshot()
+        snapshot.notes["not-a-lesson"] = "unexpected"
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidModule) }
+        snapshot = sampleSnapshot()
+        snapshot.sessions[0].moduleID = "not-a-lesson"
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidModule) }
+    }
+
+    func testSessionDurationAndDuplicateIDsAreValidated() throws {
+        for minutes in [-1, 0, 721, Int.max] {
+            var snapshot = sampleSnapshot()
+            snapshot.sessions[0].minutes = minutes
+            try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidSession) }
+        }
+        var snapshot = sampleSnapshot()
+        snapshot.sessions.append(snapshot.sessions[0])
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidSession) }
+        snapshot = sampleSnapshot()
+        snapshot.sessions[0].minutes = 720
+        try XCTAssertNoThrow(try store.exportData(snapshot))
+    }
+
+    func testInvalidSessionDatesAreRejected() throws {
+        for date in [Date(timeIntervalSince1970: -1), Date(timeIntervalSince1970: .infinity)] {
+            var snapshot = sampleSnapshot()
+            snapshot.sessions[0].date = date
+            try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidSession) }
+        }
+    }
+
+    func testTextLimitsCountUTF8Bytes() throws {
+        var snapshot = sampleSnapshot()
+        snapshot.dailyFocus = String(repeating: "é", count: 1_001)
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .textLimit) }
+        snapshot = sampleSnapshot()
+        snapshot.notes["f01"] = String(repeating: "a", count: 20_001)
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .textLimit) }
+        snapshot = sampleSnapshot()
+        snapshot.sessions[0].reflection = String(repeating: "a", count: 20_001)
+        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .textLimit) }
+    }
+
+    func testOversizedBackupRejectedBeforeDecoding() throws {
+        try XCTAssertThrowsError(try store.importData(Data(repeating: 32, count: ProgressFileStore.maximumBackupBytes + 1))) {
+            try XCTAssertEqual($0 as? ProgressError, .oversizedBackup)
+        }
+    }
+
+    func testInvalidSavePreservesPreviousSnapshotBytes() throws {
+        let original = sampleSnapshot()
+        try store.save(original)
+        let bytes = try Data(contentsOf: store.fileURL)
+        var invalid = original
+        invalid.sessions[0].minutes = 0
+        try XCTAssertThrowsError(try store.save(invalid))
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), bytes)
+        try XCTAssertEqual(try store.load(), original)
+    }
+
+    func testDamagedFileIsPreservedAndNotSilentlyReset() throws {
+        try FileManager.default.createDirectory(at: store.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let damaged = Data("interrupted or damaged storage".utf8)
+        try damaged.write(to: store.fileURL)
+        try XCTAssertThrowsError(try store.load())
+        try XCTAssertThrowsError(try store.save(ProgressSnapshot())) {
+            try XCTAssertEqual($0 as? ProgressError, .damagedExistingFile)
+        }
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), damaged)
+    }
+
+    func testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup() throws {
+        try FileManager.default.createDirectory(at: store.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let damaged = Data("damaged original".utf8)
+        try damaged.write(to: store.fileURL)
+        let original = sampleSnapshot()
+        let data = try store.exportData(original)
+        try XCTAssertEqual(try store.recoverFromBackup(data), original)
+        try XCTAssertEqual(try store.load(), original)
+        let preserved = try FileManager.default.contentsOfDirectory(at: store.fileURL.deletingLastPathComponent(), includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent.hasPrefix("progress-before-restore-") }
+        try XCTAssertEqual(preserved.count, 1)
+        try XCTAssertEqual(try Data(contentsOf: try XCTUnwrap(preserved.first)), damaged)
+    }
+
+    func testInvalidRecoveryDoesNotTouchExistingData() throws {
+        try store.save(sampleSnapshot())
+        let before = try Data(contentsOf: store.fileURL)
+        try XCTAssertThrowsError(try store.recoverFromBackup(Data("{}".utf8)))
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), before)
+        try XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: store.fileURL.deletingLastPathComponent().path), ["progress.json"])
+    }
+
+    func testReadOnlyDestinationFailsWithoutReportingSuccess() throws {
+        // A regular file cannot contain the progress file. This deterministically
+        // simulates a failed storage destination without relying on Unix modes.
+        let blocker = directory.appendingPathComponent("not-a-folder")
+        try Data("preserve me".utf8).write(to: blocker)
+        let failing = ProgressFileStore(fileURL: blocker.appendingPathComponent("progress.json"),
+                                       allowedModuleIDs: store.allowedModuleIDs)
+        try XCTAssertThrowsError(try failing.save(sampleSnapshot()))
+        try XCTAssertEqual(try Data(contentsOf: blocker), Data("preserve me".utf8))
+    }
+
+    func testCalendarTotalsUseLearnersTimezone() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Kolkata"))
+        let formatter = ISO8601DateFormatter()
+        let beforeMidnight = try XCTUnwrap(formatter.date(from: "2026-10-29T18:20:00Z"))
+        let afterMidnight = try XCTUnwrap(formatter.date(from: "2026-10-29T18:40:00Z"))
+        let snapshot = ProgressSnapshot(completedModuleIDs: ["f01", "f02"], sessions: [
+            StudySession(date: beforeMidnight, minutes: 25, reflection: "Paths"),
+            StudySession(date: afterMidnight, minutes: 45, reflection: "Testing")
+        ])
+        try XCTAssertEqual(snapshot.totalMinutes, 70)
+        try XCTAssertEqual(snapshot.minutes(on: beforeMidnight, calendar: calendar), 25)
+        try XCTAssertEqual(snapshot.minutes(on: afterMidnight, calendar: calendar), 45)
+        try XCTAssertEqual(snapshot.completedHours(in: try Curriculum.loadBundled()), 32)
+    }
+
+    private func sampleSnapshot() -> ProgressSnapshot {
+        ProgressSnapshot(completedModuleIDs: ["f01"], notes: ["f01": "A file is stored; a process runs."],
+                         dailyFocus: "Explain paths", sessions: [
+                            StudySession(id: UUID(uuidString: "48777513-9059-44AB-B5AF-B5BC3EC7D266")!,
+                                         date: Date(timeIntervalSince1970: 1_793_275_200),
+                                         minutes: 25, reflection: "Ran the script twice", moduleID: "f01")
+                         ])
+    }
+}

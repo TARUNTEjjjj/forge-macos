@@ -1,0 +1,2386 @@
+{
+  "version": "1.0",
+  "totalHours": 2000,
+  "overview": {
+    "title": "From mathematical reasoning to working software",
+    "audience": "A mathematically strong learner with little experience using computers and some basic Python exposure.",
+    "promise": "A structured practice plan with measurable projects, engineering skills and competitive-programming preparation. Completion does not guarantee a job, senior title, contest rating or a particular hourly rate.",
+    "pace": "2,000 hours is 50 weeks at 40 focused hours per week, or 100 weeks at 20. In 90 days it would require about 22.2 hours every day; use a sustainable schedule with sleep, review and rest.",
+    "languages": "Start with Python for readable problem solving and backend development. Add C++ for memory awareness, the standard library and performance-sensitive competitive programming.",
+    "method": "Read a short concept, predict a result, build an artifact, test it, explain the invariant, and revisit it after a delay. Progress by demonstrated behavior, not by hours alone.",
+    "timeAllocation": {
+      "conceptsAndReading": 400,
+      "deliberatePracticeAndProjects": 1000,
+      "debuggingReviewAndUpsolving": 400,
+      "assessmentsAndReflection": 200
+    },
+    "assessment": "Use varied project behavior to choose the next practice task. A failed run is evidence about the next useful example, never a judgment about intelligence. Keep internal adaptation separate from a public leaderboard, and let learners inspect or delete their learning data.",
+    "integrity": "External problem statements and solutions remain on their original platforms. Submit your own work, follow each contest and assessment policy, and attribute assistance in portfolio projects.",
+    "sourceNote": "Original lesson text and exercises, with links to official documentation and first-party learning resources. Dynamic platform rules, links, job availability and language support should be checked at use time.",
+    "difficultyNote": "Problem difficulty labels are curriculum guidance (Foundation, Developing, Advanced, Expert), not live platform ratings. Read and submit on the original platform; no proprietary statement or solution is reproduced here.",
+    "auditNote": "Content audit: totals, prerequisite order, structural completeness, source-domain allowlist and executable examples have reproducible checks. This is a curriculum and assessment plan, not a claim that every external exercise has an integrated judge or that completing a checkbox demonstrates mastery."
+  },
+  "resources": [
+    {
+      "id": "python",
+      "title": "The Python tutorial",
+      "url": "https://docs.python.org/3/tutorial/",
+      "provider": "Python Software Foundation",
+      "topic": "Python",
+      "description": "Use after the guided computer-basics lessons; the official tutorial assumes some programming familiarity."
+    },
+    {
+      "id": "python-download",
+      "title": "Install Python",
+      "url": "https://www.python.org/downloads/",
+      "provider": "Python Software Foundation",
+      "topic": "Setup",
+      "description": "Choose the supported installer for your operating system."
+    },
+    {
+      "id": "vscode",
+      "title": "Python in Visual Studio Code",
+      "url": "https://code.visualstudio.com/docs/python/python-tutorial",
+      "provider": "Microsoft",
+      "topic": "Setup",
+      "description": "Install the editor, select an interpreter and run a file."
+    },
+    {
+      "id": "shell",
+      "title": "The Missing Semester",
+      "url": "https://missing.csail.mit.edu/",
+      "provider": "MIT",
+      "topic": "Developer tools",
+      "description": "Command line, debugging, version control and software tools."
+    },
+    {
+      "id": "git",
+      "title": "Pro Git, second edition",
+      "url": "https://git-scm.com/book/en/v2",
+      "provider": "Git project",
+      "topic": "Git",
+      "description": "The official freely available book, from snapshots to internals."
+    },
+    {
+      "id": "github",
+      "title": "GitHub Hello World",
+      "url": "https://docs.github.com/en/get-started/start-your-journey/hello-world",
+      "provider": "GitHub",
+      "topic": "GitHub",
+      "description": "An introduction to repositories, branches and pull requests."
+    },
+    {
+      "id": "github-pr",
+      "title": "Pull request guide",
+      "url": "https://docs.github.com/en/pull-requests/get-started",
+      "provider": "GitHub",
+      "topic": "GitHub",
+      "description": "Propose and review changes, including fork workflows."
+    },
+    {
+      "id": "github-skills",
+      "title": "GitHub Skills",
+      "url": "https://learn.github.com/skills",
+      "provider": "GitHub",
+      "topic": "GitHub",
+      "description": "Guided practical exercises within repositories."
+    },
+    {
+      "id": "actions",
+      "title": "GitHub Actions",
+      "url": "https://docs.github.com/en/actions",
+      "provider": "GitHub",
+      "topic": "CI",
+      "description": "Workflow documentation and automated checks."
+    },
+    {
+      "id": "github-apps",
+      "title": "Building GitHub Apps",
+      "url": "https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps",
+      "provider": "GitHub",
+      "topic": "Integration",
+      "description": "Scoped app installation and server-managed authentication."
+    },
+    {
+      "id": "mit-algo",
+      "title": "Introduction to Algorithms, 6.006",
+      "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/",
+      "provider": "MIT OpenCourseWare",
+      "topic": "Algorithms",
+      "description": "Lectures, notes and exercises for algorithmic reasoning."
+    },
+    {
+      "id": "mit-advanced",
+      "title": "Design and Analysis of Algorithms, 6.046J",
+      "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/",
+      "provider": "MIT OpenCourseWare",
+      "topic": "Algorithms",
+      "description": "Advanced analysis, reductions and algorithm design."
+    },
+    {
+      "id": "cpp",
+      "title": "C++ getting started",
+      "url": "https://isocpp.org/get-started",
+      "provider": "Standard C++ Foundation",
+      "topic": "C++",
+      "description": "C++ tooling and learning references."
+    },
+    {
+      "id": "cpp-guidelines",
+      "title": "C++ Core Guidelines",
+      "url": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines",
+      "provider": "C++ Core Guidelines authors",
+      "topic": "C++",
+      "description": "Ownership, lifetime and robust modern C++ design."
+    },
+    {
+      "id": "cf",
+      "title": "Codeforces problemset",
+      "url": "https://codeforces.com/problemset",
+      "provider": "Codeforces",
+      "topic": "Competitive programming",
+      "description": "Practice on the official judge; respect contest rules and problem rights."
+    },
+    {
+      "id": "cf-api",
+      "title": "Codeforces API",
+      "url": "https://codeforces.com/apiHelp",
+      "provider": "Codeforces",
+      "topic": "Integration",
+      "description": "Public problem and submission metadata; rate limits apply."
+    },
+    {
+      "id": "cses",
+      "title": "CSES Problem Set",
+      "url": "https://cses.fi/problemset/",
+      "provider": "CSES",
+      "topic": "Algorithms",
+      "description": "Topic-organized practice on the official judge."
+    },
+    {
+      "id": "atcoder",
+      "title": "AtCoder Educational DP Contest",
+      "url": "https://atcoder.jp/contests/dp/tasks",
+      "provider": "AtCoder",
+      "topic": "Dynamic programming",
+      "description": "A progression of dynamic programming tasks."
+    },
+    {
+      "id": "leetcode",
+      "title": "LeetCode problemset",
+      "url": "https://leetcode.com/problemset/",
+      "provider": "LeetCode",
+      "topic": "Interview practice",
+      "description": "Use official statements and judge; access requirements vary."
+    },
+    {
+      "id": "icpc",
+      "title": "ICPC regional rules",
+      "url": "https://icpc.global/regionals/rules",
+      "provider": "ICPC Foundation",
+      "topic": "Competitive programming",
+      "description": "Check current eligibility and region-specific rules before entering."
+    },
+    {
+      "id": "mdn",
+      "title": "Learn web development",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development",
+      "provider": "Mozilla",
+      "topic": "Web fundamentals",
+      "description": "HTML, CSS, JavaScript, HTTP and accessibility."
+    },
+    {
+      "id": "fastapi",
+      "title": "FastAPI tutorial",
+      "url": "https://fastapi.tiangolo.com/tutorial/",
+      "provider": "FastAPI project",
+      "topic": "Backend",
+      "description": "Request validation, API design, testing and application structure."
+    },
+    {
+      "id": "postgres",
+      "title": "PostgreSQL tutorial",
+      "url": "https://www.postgresql.org/docs/current/tutorial.html",
+      "provider": "PostgreSQL Global Development Group",
+      "topic": "Databases",
+      "description": "Relational data, joins, constraints and transactions."
+    },
+    {
+      "id": "pytest",
+      "title": "pytest documentation",
+      "url": "https://docs.pytest.org/en/stable/",
+      "provider": "pytest project",
+      "topic": "Testing",
+      "description": "Assertions, fixtures, parametrization and test structure."
+    },
+    {
+      "id": "hypothesis",
+      "title": "Hypothesis documentation",
+      "url": "https://hypothesis.readthedocs.io/en/latest/",
+      "provider": "Hypothesis project",
+      "topic": "Testing",
+      "description": "Generate examples from properties and shrink failing cases."
+    },
+    {
+      "id": "playwright",
+      "title": "Playwright documentation",
+      "url": "https://playwright.dev/docs/intro",
+      "provider": "Microsoft",
+      "topic": "Testing",
+      "description": "Browser automation and end-to-end tests."
+    },
+    {
+      "id": "owasp",
+      "title": "Web Security Testing Guide",
+      "url": "https://owasp.org/projects/web-security-testing-guide",
+      "provider": "OWASP Foundation",
+      "topic": "Security",
+      "description": "A structured guide to testing web application security."
+    },
+    {
+      "id": "otel",
+      "title": "OpenTelemetry documentation",
+      "url": "https://opentelemetry.io/docs/",
+      "provider": "OpenTelemetry project",
+      "topic": "Observability",
+      "description": "Logs, metrics and distributed traces."
+    },
+    {
+      "id": "sre",
+      "title": "Site Reliability Engineering",
+      "url": "https://sre.google/sre-book/table-of-contents/",
+      "provider": "Google",
+      "topic": "Reliability",
+      "description": "Service objectives, incidents, releases and operational learning."
+    },
+    {
+      "id": "docker",
+      "title": "Docker getting started",
+      "url": "https://docs.docker.com/get-started/",
+      "provider": "Docker",
+      "topic": "Deployment",
+      "description": "Containers, images and repeatable development environments."
+    },
+    {
+      "id": "micro1",
+      "title": "micro1 expert opportunities",
+      "url": "https://www.micro1.ai/",
+      "provider": "micro1",
+      "topic": "Careers",
+      "description": "Visit the official opportunities area for current eligibility, assessments and terms."
+    },
+    {
+      "id": "mercor",
+      "title": "Mercor opportunities",
+      "url": "https://www.mercor.com/",
+      "provider": "Mercor",
+      "topic": "Careers",
+      "description": "Current expert opportunities; compensation and work availability are role-specific."
+    },
+    {
+      "id": "outlier",
+      "title": "Outlier opportunities",
+      "url": "https://outlier.ai/",
+      "provider": "Outlier",
+      "topic": "Careers",
+      "description": "Official expert platform; verify location, qualifications, rates and project availability."
+    },
+    {
+      "id": "afterquery",
+      "title": "AfterQuery",
+      "url": "https://www.afterquery.com/",
+      "provider": "AfterQuery",
+      "topic": "Careers",
+      "description": "Expert-data company; this may be the company intended by the name AfterQuails."
+    },
+    {
+      "id": "git-install",
+      "title": "Installing Git",
+      "url": "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git",
+      "provider": "Git project",
+      "topic": "Setup",
+      "description": "Choose the installation method for your operating system and verify the command."
+    },
+    {
+      "id": "venv",
+      "title": "Python virtual environments",
+      "url": "https://docs.python.org/3/tutorial/venv.html",
+      "provider": "Python Software Foundation",
+      "topic": "Setup",
+      "description": "Project environments and activation conventions."
+    },
+    {
+      "id": "git-identity",
+      "title": "Setting your Git author name",
+      "url": "https://docs.github.com/en/get-started/git-basics/setting-your-username-in-git",
+      "provider": "GitHub",
+      "topic": "Git",
+      "description": "Author metadata is separate from the account used for authentication."
+    },
+    {
+      "id": "clang",
+      "title": "Clang compiler user manual",
+      "url": "https://clang.llvm.org/docs/UsersManual.html",
+      "provider": "LLVM project",
+      "topic": "C++",
+      "description": "Compiler options, diagnostics and toolchain concepts."
+    }
+  ],
+  "phases": [
+    {
+      "id": "foundations",
+      "title": "Computer confidence",
+      "description": "Navigate files, use a terminal and turn mathematical steps into a running program.",
+      "hours": 80,
+      "color": "#8b7cf8",
+      "prerequisites": [],
+      "modules": [
+        {
+          "id": "f01",
+          "title": "Meet your computer",
+          "hours": 16,
+          "lessons": [
+            "A computer follows instructions stored in files. A file has a name, a location and bytes; a folder groups files. A program is one kind of file, while a process is a running instance of a program. Your editor changes source text; the Python interpreter reads that text and performs its instructions.",
+            "Create a folder named learning-lab inside your Documents folder. Open that folder in an editor. Save hello.py with print(\"Hello, builder\") and run it. Changing a file in the editor does not change the process that already finished: save, run again and observe the new output. Learn where your browser puts downloads. Enable filename extensions in your file manager if they are hidden: hello.py and hello.py.txt are different filenames. Save source as plain text in the editor, not as a formatted word-processing document.",
+            "Use a small notebook of terms: source code, terminal, browser, operating system, memory and disk. Memory holds working values while a process runs; a saved file survives after the process exits. Trace one input from keyboard to program to output, and distinguish an app installed on your computer from a website opened in a browser."
+          ],
+          "task": "Create learning-lab, save hello.py, run it, change its message and run it again. Add a text file explaining where each file is stored.",
+          "successCriteria": [
+            "Find the file again after closing the editor",
+            "Explain source file versus running process",
+            "Run a saved script without copying it into a chat"
+          ],
+          "project": "A working local learning-lab folder",
+          "resources": [
+            {
+              "title": "Install Python",
+              "url": "https://www.python.org/downloads/"
+            },
+            {
+              "title": "Python in Visual Studio Code",
+              "url": "https://code.visualstudio.com/docs/python/python-tutorial"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "print(\"Hello, builder\")\n",
+              "explanation": "Save this as hello.py, then run the saved file with your installed Python interpreter."
+            }
+          ]
+        },
+        {
+          "id": "f02",
+          "title": "Paths and the terminal",
+          "hours": 16,
+          "lessons": [
+            "A terminal is a text interface to a shell. The shell starts programs and tracks a current directory. An absolute path names a location from the filesystem root; a relative path starts at the current directory. On macOS or Linux, pwd shows that location and ls lists entries; in PowerShell, Get-Location and Get-ChildItem serve the same purpose. For example, a Windows path can look like C:\\Users\\YourName\\Documents\\learning-lab, while macOS and Linux paths start with /. Use your own actual folder path; YourName is an explanatory placeholder.",
+            "Practice cd to enter a folder and cd .. to move to its parent. Put quotation marks around a path containing spaces. Run python3 hello.py on many macOS/Linux installations or py hello.py on Windows; the correct command depends on your installer. Use the version command to identify the interpreter, rather than guessing why a command is missing. On Windows, PowerShell and Git Bash are different shells with different path and activation conventions. Choose one for the first exercise and label your notes with its name.",
+            "Commands can read or change files, so understand a command before running it. Begin with listing, moving between directories, making a new directory and printing a file. Learn Ctrl+C to interrupt a foreground program. A path error means the shell cannot find the target at the supplied location; inspect the directory before changing the program."
+          ],
+          "task": "Navigate to learning-lab using only the terminal and run the script from both its own folder and its parent using a relative path.",
+          "successCriteria": [
+            "Explain the current directory",
+            "Handle a folder name containing a space",
+            "Interrupt a deliberately long-running local script"
+          ],
+          "project": "A terminal quick-reference with commands you have actually tried",
+          "resources": [
+            {
+              "title": "The Missing Semester",
+              "url": "https://missing.csail.mit.edu/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "f03",
+          "title": "Input, output and a first useful tool",
+          "hours": 16,
+          "lessons": [
+            "An algorithm maps an allowed input to an output. The computer also needs a representation of each: input() reads text, int() converts suitable text to an integer, and print() writes text. The expression 2 + 3 calculates a number; the text \"2\" + \"3\" joins characters. Types describe which operations are meaningful.",
+            "Build a study-time calculator: read minutes studied, convert to hours and minutes using integer division and remainder, and display a clear result. For a nonnegative integer m, m = 60q + r with 0 ≤ r < 60. This mathematical identity is also an executable check of the program behavior.",
+            "For a friendly local application, an input prompt is useful. For a competitive-programming judge, print only the specified output: extra friendly messages can make an otherwise correct answer fail. Keep the calculation in a function so a user interface and a judge-style interface can both reuse it."
+          ],
+          "task": "Write a minutes-to-hours calculator and test 0, 1, 59, 60, 61 and 1,000 minutes. Explain how you would handle negative input.",
+          "successCriteria": [
+            "Compute quotient and remainder correctly",
+            "Separate text input from numeric calculation",
+            "Check a boundary case before declaring success"
+          ],
+          "project": "Study-time calculator",
+          "resources": [
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "def split_minutes(minutes):\n    if minutes < 0:\n        raise ValueError(\"Minutes must be nonnegative\")\n    return minutes // 60, minutes % 60\n\nhours, minutes = split_minutes(125)\nprint(hours, minutes)\n",
+              "explanation": "The function returns two values. For 125 minutes, the output is 2 5; verify the quotient-and-remainder identity."
+            }
+          ]
+        },
+        {
+          "id": "f04",
+          "title": "Debugging as an experiment",
+          "hours": 16,
+          "lessons": [
+            "Debugging is a controlled experiment. First describe what you expected, what actually happened and the smallest input that shows the difference. A traceback identifies a sequence of calls and an error location. Read the final error description, then inspect the relevant lines and values; the first visible symptom is not always the original cause.",
+            "A program may fail before it runs, stop during execution, or finish with the wrong result. These require different investigations. Reduce the failing case, print a small intermediate value or pause in the debugger, and change one hypothesis at a time. An assertion records a condition you expect to hold, such as assert 0 <= remainder < 60.",
+            "Treat a repair as unfinished until you rerun the failing example and one previously working example. Record why the change solves the cause. If you ask for help, provide the exact command, the small input, the error and what you tried; remove passwords and personal data from the report."
+          ],
+          "task": "Introduce three deliberate defects into your calculator, then repair them using a written hypothesis and a regression example for each.",
+          "successCriteria": [
+            "Produce a minimal failing input",
+            "Read a traceback to find the relevant line",
+            "Preserve the repaired cases as checks"
+          ],
+          "project": "A three-entry debugging journal",
+          "resources": [
+            {
+              "title": "Python in Visual Studio Code",
+              "url": "https://code.visualstudio.com/docs/python/python-tutorial"
+            },
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "hours, remainder = split_minutes(125)\nassert 125 == 60 * hours + remainder\nassert 0 <= remainder < 60\n",
+              "explanation": "These checks express a relationship, not just one expected output. Place them after the function from the preceding lesson."
+            }
+          ]
+        },
+        {
+          "id": "f05",
+          "title": "Your reproducible workspace",
+          "hours": 16,
+          "lessons": [
+            "A project should be understandable to your future self. Keep code, tests and a README together. A README explains what the program does and the commands needed to run it. A dependency is another package your program uses; record dependencies so another person can recreate the environment.",
+            "Create a Python virtual environment with python -m venv .venv, using the interpreter command that works on your system. Activate it using the command for your shell or select it in your editor. A virtual environment isolates project packages; it is not a security sandbox. Avoid installing random packages simply to solve a small standard-library task. In a macOS/Linux bash or zsh terminal, source .venv/bin/activate activates the environment. In Windows PowerShell, use .\\.venv\\Scripts\\Activate.ps1. If activation is restricted, run .\\.venv\\Scripts\\python.exe directly instead of weakening system-wide execution policy; on macOS/Linux the direct interpreter is .venv/bin/python. Confirm with python -c \"import sys; print(sys.executable)\" after activation.",
+            "Build a small vocabulary of failure boundaries: the editor saves a file, the shell locates a program, the interpreter runs it, and a package supplies imported functionality. When one boundary fails, inspect that boundary. Explain every setup step in your README, including how to verify the selected interpreter."
+          ],
+          "task": "Make the calculator runnable from a fresh folder using only your README. Create a virtual environment and record the Python version used.",
+          "successCriteria": [
+            "A second person can follow the run instructions",
+            "Identify the active interpreter",
+            "Keep personal data and environment files out of shared examples"
+          ],
+          "project": "Learning-lab starter project with README",
+          "resources": [
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            },
+            {
+              "title": "Python in Visual Studio Code",
+              "url": "https://code.visualstudio.com/docs/python/python-tutorial"
+            },
+            {
+              "title": "Python virtual environments",
+              "url": "https://docs.python.org/3/tutorial/venv.html"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "shell",
+              "code": "python -m venv .venv\npython --version\n",
+              "explanation": "Use the interpreter command installed on your system, such as python3 or py. Select the new environment in your editor; activation commands vary by shell."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "python",
+      "title": "Python as a thinking tool",
+      "description": "Write precise programs, model data and turn proof ideas into tested behavior.",
+      "hours": 160,
+      "color": "#5f9df8",
+      "prerequisites": [
+        "foundations"
+      ],
+      "modules": [
+        {
+          "id": "p01",
+          "title": "Values, conditions and invariants",
+          "hours": 32,
+          "lessons": [
+            "A variable is a name bound to a value. Assignment changes a binding; equality compares values. A condition chooses a branch based on a Boolean expression. Translate a piecewise mathematical definition into if, elif and else, then explicitly consider boundary points where two intervals meet.",
+            "Write a function that computes an original scholarship score from study hours and completed tasks. State its domain and its intended output before implementation. Keep policy rules separate from reading input so each branch can be checked directly. A clear name such as completed_tasks communicates more than a clever one-letter abbreviation in application code.",
+            "An invariant is a statement that remains true at a chosen program point. If the score must stay between 0 and 100, verify that condition for zero work, maximum work and out-of-range input. Decide whether invalid input should be rejected or transformed; silent assumptions make later failures difficult to explain."
+          ],
+          "task": "Build a scholarship-score function with four policy branches and at least eight boundary examples.",
+          "successCriteria": [
+            "State the valid domain",
+            "Distinguish assignment from comparison",
+            "Test every policy boundary"
+          ],
+          "project": "A tested policy calculator",
+          "resources": [
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "p02",
+          "title": "Loops, functions and decomposition",
+          "hours": 32,
+          "lessons": [
+            "A loop performs a step repeatedly while changing state. Explain a loop with three parts: an invariant, a progress measure and a stopping condition. For summing n values, the partial sum after k iterations should equal the sum of the first k values. This is induction expressed as a program structure.",
+            "A function names a reusable operation and exposes inputs and outputs. Prefer returning a value over printing from every helper, because returned values can be composed and tested. Local variables belong to one call. Avoid mutable global state while learning; it hides the relationship between an input and a result.",
+            "Build a budget analyzer that accepts a list of daily practice minutes and calculates total, longest session and count above a threshold. Start with simple loops, then compare with standard-library operations. Explain what happens for an empty list instead of relying on a convenient sample."
+          ],
+          "task": "Implement the analyzer using small functions and trace the state for five daily values by hand.",
+          "successCriteria": [
+            "Write and explain a loop invariant",
+            "Handle empty input deliberately",
+            "Reuse one function from two different callers"
+          ],
+          "project": "Practice-session analyzer",
+          "resources": [
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "def total_minutes(sessions):\n    total = 0\n    for minutes in sessions:\n        total += minutes\n    return total\n\nassert total_minutes([10, 20, 5]) == 35\nassert total_minutes([]) == 0\n",
+              "explanation": "After k iterations, total equals the sum of the first k sessions. That invariant also covers an empty list."
+            }
+          ]
+        },
+        {
+          "id": "p03",
+          "title": "Collections and representation",
+          "hours": 32,
+          "lessons": [
+            "A list preserves order and permits repeated values. A tuple is useful for a fixed record, a set expresses membership without duplicates, and a dictionary maps keys to values. Choose a representation from the operations your program needs. A mathematical relation is not automatically best represented by a two-dimensional list.",
+            "Mutability matters: two names may refer to the same list, so changing it through one name can affect the other. Build tiny experiments with copying, nested lists and function arguments. Strings are immutable; constructing a long result character by character may allocate repeatedly, while collecting parts and joining can be clearer and faster.",
+            "Model a learning library as records keyed by problem ID, with a set of tags and a list of attempts. Specify how duplicate IDs and missing fields behave. Keep a distinction between absent data, an empty collection and a real value of zero. Those states often require different application behavior."
+          ],
+          "task": "Create an in-memory problem notebook with add, find-by-tag, record-attempt and summary operations.",
+          "successCriteria": [
+            "Choose list, set and dictionary for explicit reasons",
+            "Demonstrate aliasing and a safe copy",
+            "Handle duplicate and missing identifiers"
+          ],
+          "project": "Problem notebook core",
+          "resources": [
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "attempts = [\"graph\", \"dp\", \"graph\"]\ncounts = {}\nfor topic in attempts:\n    counts[topic] = counts.get(topic, 0) + 1\nprint(counts)\n",
+              "explanation": "A dictionary stores one count per distinct topic. Contrast this with a set, which would keep only membership."
+            }
+          ]
+        },
+        {
+          "id": "p04",
+          "title": "Files, exceptions and modules",
+          "hours": 32,
+          "lessons": [
+            "A process loses its ordinary in-memory values when it exits, so persist the notebook in a file. JSON represents strings, numbers, Booleans, lists, objects and null. Serialize a deliberate data structure instead of arbitrary executable code. Validate a loaded record before treating it as trusted application state.",
+            "Use a context manager to close files reliably. Catch the specific failures your application can recover from, such as a missing file on the first run or invalid JSON. Do not catch every exception and pretend the operation succeeded. Separate reading a file, validating data and computing a summary so each failure has a clear owner.",
+            "A module is a Python file that can expose functions to other code. Split storage from business rules and command handling. Add an entry point guarded by if __name__ == \"__main__\" so importing the module does not unexpectedly request keyboard input. Save to a temporary file and replace the old file when appropriate to avoid partial writes."
+          ],
+          "task": "Persist the notebook as JSON and recover gracefully from a missing file, a malformed file and a record with an invalid field.",
+          "successCriteria": [
+            "Restart without losing valid records",
+            "Report a meaningful storage error",
+            "Import logic without running the command interface"
+          ],
+          "project": "Persistent problem notebook",
+          "resources": [
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "import json\nfrom pathlib import Path\n\npath = Path(\"sessions.json\")\npath.write_text(json.dumps([15, 30]), encoding=\"utf-8\")\nsessions = json.loads(path.read_text(encoding=\"utf-8\"))\nassert sessions == [15, 30]\n",
+              "explanation": "This small example writes a file in the current directory. A full application must validate loaded records and handle storage failures."
+            }
+          ]
+        },
+        {
+          "id": "p05",
+          "title": "Tests, types and a small release",
+          "hours": 32,
+          "lessons": [
+            "A test is an executable example of required behavior. Arrange an input, call the operation and compare with an independently chosen expected result. Tests are strongest when they would fail for a plausible bug. Testing an implementation against a second copy of the same mistake gives false confidence.",
+            "Type annotations communicate intended shapes and help tools detect mismatches, but ordinary Python does not automatically enforce every annotation at runtime. Add annotations to public functions, document unusual failure cases, and use a small data class when named fields make a record clearer. Do not introduce a class merely to wrap one function.",
+            "Release a usable command-line notebook with help text, documented input format and tests. Ask someone to use it from its README. Observe where the person gets stuck and improve the interface. The artifact is complete when its behavior is understandable and repeatable, not when it contains many lines of code."
+          ],
+          "task": "Deliver a command-line notebook with add, list and stats commands, type annotations and a focused pytest suite.",
+          "successCriteria": [
+            "Tests catch a deliberately introduced defect",
+            "Malformed input does not destroy saved records",
+            "A new user completes a task from the README"
+          ],
+          "project": "Problem notebook v1",
+          "resources": [
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            },
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "def test_total_minutes_includes_every_session():\n    assert total_minutes([4, 9, 2]) == 15\n\ndef test_total_minutes_empty_history():\n    assert total_minutes([]) == 0\n",
+              "explanation": "Import total_minutes from your project before running these pytest tests. They check two distinct behaviors."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "git",
+      "title": "Git and GitHub, from first commit to collaboration",
+      "description": "Understand snapshots and history, then contribute changes that another person can review.",
+      "hours": 120,
+      "color": "#f0a265",
+      "prerequisites": [
+        "foundations",
+        "python"
+      ],
+      "modules": [
+        {
+          "id": "g01",
+          "title": "Snapshots and the three working areas",
+          "hours": 24,
+          "lessons": [
+            "Git records project history on your computer. GitHub hosts repositories and collaboration tools online. They are related but different: you can commit with Git while offline, and a local commit is not automatically uploaded. A repository contains project history; a commit records a snapshot with metadata and parent links. Install Git from the official installation instructions for your operating system and verify git --version in a new terminal before beginning. Git author name and email label commits; they are not a GitHub password or an authentication method.",
+            "Your working tree contains the files you edit. The index, often called the staging area, describes the next snapshot. The current commit is the saved baseline. Use git status, git diff and git diff --staged to inspect these views. git add selects content for the next commit; git commit records the staged snapshot.",
+            "Initialize a repository for your notebook and configure your author identity. Write .gitignore rules for temporary files, caches and the virtual environment before adding everything. Make one coherent change per commit and explain its purpose. An ignored file already tracked by Git remains tracked until you intentionally remove it from tracking. Inside this repository, set git config user.name \"Your chosen author name\" and git config user.email \"your chosen commit email\". Replace the explanatory text with your choices; GitHub offers a noreply commit email if you prefer to keep a personal address private. These commands configure only the current repository."
+          ],
+          "task": "Create a repository, commit a baseline, make two edits, stage only one, and explain each diff before committing.",
+          "successCriteria": [
+            "Explain working tree, index and commit",
+            "Show a clean status after a commit",
+            "Keep credentials and virtual environments out of history"
+          ],
+          "project": "Notebook repository with a readable initial history",
+          "resources": [
+            {
+              "title": "Pro Git, second edition",
+              "url": "https://git-scm.com/book/en/v2"
+            },
+            {
+              "title": "Installing Git",
+              "url": "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+            },
+            {
+              "title": "Setting your Git author name",
+              "url": "https://docs.github.com/en/get-started/git-basics/setting-your-username-in-git"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "shell",
+              "code": "git --version\ngit init\ngit status\ngit add README.md\ngit diff --staged\ngit commit -m \"Document how to run the notebook\"\n",
+              "explanation": "Run these in your practice repository after creating README.md and configuring your Git author identity. Inspect the staged content before recording it."
+            }
+          ]
+        },
+        {
+          "id": "g02",
+          "title": "Branches, merges and conflicts",
+          "hours": 24,
+          "lessons": [
+            "A branch is a movable name for a commit. A commit can refer to one or more parents, producing a directed acyclic graph. Creating a branch is inexpensive because it adds a reference, not a full copy of the project. HEAD usually identifies the branch currently checked out; a detached HEAD points directly to a commit.",
+            "Create a feature branch with git switch -c and implement one improvement. Merge combines histories; when branches changed incompatible parts of a file, Git needs you to choose the intended combined content. Conflict markers identify alternatives, but resolving a conflict requires understanding behavior, not merely deleting markers.",
+            "Build a deliberate conflict in a practice repository, inspect both branches and the common ancestor, and decide which behavior must remain. Run tests after resolving it. A merge can be textually clean and still introduce a logical bug, so passing conflict resolution is not the same as proving the feature correct."
+          ],
+          "task": "Create two branches that edit the same notebook rule, merge them, resolve the conflict and preserve both intended behaviors.",
+          "successCriteria": [
+            "Draw the history graph before and after merging",
+            "Explain the resolution in a commit message",
+            "Run the relevant behavior checks after the merge"
+          ],
+          "project": "A documented conflict-resolution exercise",
+          "resources": [
+            {
+              "title": "Pro Git, second edition",
+              "url": "https://git-scm.com/book/en/v2"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "shell",
+              "code": "git switch -c feature/session-summary\ngit log --oneline --graph --all\n",
+              "explanation": "The first command creates and selects a branch. The second displays history; make and commit a small feature before returning to the original branch."
+            }
+          ]
+        },
+        {
+          "id": "g03",
+          "title": "Remotes and your first pull request",
+          "hours": 24,
+          "lessons": [
+            "A remote is a named repository location. git fetch downloads remote history and updates remote-tracking references; it does not automatically merge that history into your branch. git push sends commits and asks the remote to update a reference. Authentication establishes identity; repository permissions determine what that identity may change.",
+            "On GitHub, a pull request proposes a difference between branches for review. A fork is a repository copy under another account, useful when you lack write access to the original. Read the contribution guide, make a focused branch, push it to your fork and open a pull request to the intended upstream branch.",
+            "A useful pull request explains the user problem, the behavior change and how it was checked. Include a minimal reproduction for a bug fix. Respond to review comments with evidence and curiosity. Keep tokens out of code and screenshots, use scoped authentication, and review the final diff before publishing anything."
+          ],
+          "task": "Publish your own notebook repository and propose a small change through a pull request. Review its diff as if you were a teammate.",
+          "successCriteria": [
+            "Explain clone, fork, fetch and push",
+            "Link a concrete test or reproduction in the PR",
+            "Confirm repository and branch before sending changes"
+          ],
+          "project": "First reviewable GitHub pull request",
+          "resources": [
+            {
+              "title": "GitHub Hello World",
+              "url": "https://docs.github.com/en/get-started/start-your-journey/hello-world"
+            },
+            {
+              "title": "Pull request guide",
+              "url": "https://docs.github.com/en/pull-requests/get-started"
+            },
+            {
+              "title": "GitHub Skills",
+              "url": "https://learn.github.com/skills"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "shell",
+              "code": "git remote -v\ngit fetch origin\ngit log --oneline --graph --all\n",
+              "explanation": "After setting up a remote, inspect its address before fetching. Fetching updates remote-tracking information without merging into your current branch."
+            }
+          ]
+        },
+        {
+          "id": "g04",
+          "title": "Recovering and investigating history",
+          "hours": 24,
+          "lessons": [
+            "History is a debugging tool. git log --oneline --graph shows ancestry, git show explains one commit and git blame identifies commits that last changed lines. Blame is a navigation aid, not a judgment about people. Use git bisect in a disposable exercise to find the first bad commit by repeatedly classifying versions.",
+            "Different recovery commands act on different objects. git restore can replace working content, git revert creates a new inverse commit, and git reset can move a branch reference and possibly change the index or files. Inspect status, preserve uncommitted work and choose the command from the intended effect. Do not experiment with destructive reset modes on valuable work.",
+            "Rebasing replays changes onto a different base and creates new commit identities. It can clarify a private branch, but rewriting shared history can disrupt collaborators. Practice interactive rebase, cherry-pick, stash and reflog in a throwaway repository. Reflog is local recovery information with retention limits; it is not a substitute for backups. During a practice rebase conflict, inspect git status, edit the conflicted file to the intended content, stage the resolution with git add and run git rebase --continue. Use git rebase --abort to return to the pre-rebase state when you want to abandon that rebase. Do not use --skip merely to hide a conflict; it omits a change. Commit objects refer to tree snapshots and parents; refs and reflog explain which commits names currently or previously identified."
+          ],
+          "task": "Use a prepared practice repository to find a regression with bisect, revert a bad public change and recover a deliberately misplaced local commit.",
+          "successCriteria": [
+            "Choose revert versus reset by desired effect",
+            "Explain why rebased commit IDs change",
+            "Recover the practice branch without discarding unrelated work"
+          ],
+          "project": "Git recovery and investigation playbook",
+          "resources": [
+            {
+              "title": "Pro Git, second edition",
+              "url": "https://git-scm.com/book/en/v2"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "g05",
+          "title": "Maintaining a trustworthy repository",
+          "hours": 24,
+          "lessons": [
+            "A useful repository is an interface for people as well as machines. Provide a README, a clear license choice, setup instructions and an explanation of tests. Issues should describe observable work; labels help organize it. Tags name releases, and release notes explain what changed for users.",
+            "Automated checks can run when a pull request changes. Keep the workflow small enough to understand: install declared dependencies, run tests and report failures. Restrict token permissions and avoid exposing secrets to untrusted pull-request code. A green check indicates the checks passed; it does not guarantee every possible behavior is correct.",
+            "Practice a complete release: choose scope, review a change, merge it, tag a version and write notes. Use repository protections appropriate to your team and plan. Quality evidence includes useful tests, clear decisions and maintained issues; manufacturing many trivial commits or pull requests does not demonstrate engineering skill. For further Git depth, investigate worktrees for simultaneous checkouts, submodules for separately versioned dependencies, large-file storage for selected binary assets, signed commits for provenance, and hooks for local automation. Learn their failure modes in a disposable repository before adding them to a team workflow."
+          ],
+          "task": "Prepare notebook v1.1 with a CI workflow, a release tag, a changelog and one well-scoped issue for future work.",
+          "successCriteria": [
+            "A deliberately failing test blocks the check",
+            "README commands match the actual project",
+            "Explain the release change in user terms"
+          ],
+          "project": "A public portfolio repository with reproducible checks",
+          "resources": [
+            {
+              "title": "GitHub Actions",
+              "url": "https://docs.github.com/en/actions"
+            },
+            {
+              "title": "Pull request guide",
+              "url": "https://docs.github.com/en/pull-requests/get-started"
+            },
+            {
+              "title": "Pro Git, second edition",
+              "url": "https://git-scm.com/book/en/v2"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "dsa",
+      "title": "Data structures and algorithmic reasoning",
+      "description": "Choose representations, prove correctness and move from brute force to efficient solutions.",
+      "hours": 230,
+      "color": "#62c9a0",
+      "prerequisites": [
+        "python",
+        "git"
+      ],
+      "modules": [
+        {
+          "id": "d01",
+          "title": "Cost models and brute-force oracles",
+          "hours": 46,
+          "lessons": [
+            "Correctness and efficiency answer different questions. Start by specifying what the result means, then construct the simplest correct algorithm. Count dominant operations as input size grows. Big-O is an asymptotic upper bound under a stated cost model; it is not an exact runtime prediction or a promise that two implementations perform equally.",
+            "For a list of n values, a single scan uses O(n) inspections, while examining every unordered pair uses O(n²). Python integers can grow beyond a machine word, so arithmetic on arbitrarily large integers is not always constant time. Also account for memory: an n by n table may be impossible even when the recurrence is simple. Distinguish worst-case from expected and amortized bounds: amortized analysis bounds the cost of a sequence, while an expected bound uses an explicit probability model. The input distribution in a benchmark is another assumption and need not match either bound.",
+            "Keep the slow correct version as an oracle for tiny random inputs. Compare an optimized version against it and save any disagreement as a regression case. Benchmark separately on representative larger inputs. A timing experiment can expose a practical issue, while a complexity argument explains how the work scales."
+          ],
+          "task": "Implement a slow duplicate-pair counter and a frequency-based version. Compare them on all short lists over a small alphabet.",
+          "successCriteria": [
+            "State the input-size parameter",
+            "Separate proof, differential testing and benchmarking",
+            "Explain both time and auxiliary space"
+          ],
+          "project": "An algorithm comparison harness",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "d02",
+          "title": "Arrays, prefix sums and hashing",
+          "hours": 46,
+          "lessons": [
+            "An array supports efficient indexed access; it does not make every operation cheap. Inserting at the front of a Python list shifts later elements. A prefix sum stores cumulative totals so the sum on a half-open interval [l,r) is prefix[r] - prefix[l]. Define the empty prefix as zero to remove a special case at the left edge.",
+            "A hash table supports expected efficient key lookup under its implementation assumptions. Equality and hashing must agree for keys. A set is a natural representation for membership, while a dictionary can accumulate counts. A hash collision does not make two unequal keys identical: a correct implementation also checks equality.",
+            "Use prefix sums for many immutable range queries and a dictionary for sparse frequencies. Ask whether values can change after preprocessing, whether negative values occur and whether order matters. These questions determine which shortcut is valid. For example, a sliding-window strategy based on increasing sums may fail with negative numbers."
+          ],
+          "task": "Build an analytics tool answering range-minute totals and repeated-tag frequencies. Compare every query with a simple scan on small data.",
+          "successCriteria": [
+            "Use one interval convention consistently",
+            "Handle empty ranges and repeated keys",
+            "Explain when preprocessing is worth its cost"
+          ],
+          "project": "Practice-history range analytics",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "def prefix_sums(values):\n    prefix = [0]\n    for value in values:\n        prefix.append(prefix[-1] + value)\n    return prefix\n\np = prefix_sums([3, 1, 4, 2])\nassert p[3] - p[1] == 5\n",
+              "explanation": "The final assertion sums the half-open interval [1, 3): the values 1 and 4."
+            }
+          ]
+        },
+        {
+          "id": "d03",
+          "title": "Sorting and binary search",
+          "hours": 46,
+          "lessons": [
+            "Sorting changes a problem by exposing order. A stable sort preserves the input order of equal-key elements, which matters when multiple rankings are combined. State the comparison rule explicitly; a comparator that contradicts itself can invalidate an algorithm. Sorting is often an O(n log n) preprocessing step that enables simpler scans.",
+            "Binary search is a proof about a monotone predicate. Maintain a region known to be false, a region known to be true and an unresolved interval that strictly shrinks. Searching for the first value that satisfies a condition is more general than searching for an exact array element.",
+            "Apply binary search to the smallest daily capacity that completes a set of study sessions within a deadline. First prove that increasing capacity cannot turn a feasible schedule into an infeasible one. Test the feasibility function independently, then test empty, singleton, all-false and all-true boundary patterns. Never copy a template without its interval invariant."
+          ],
+          "task": "Implement lower-bound search and a capacity-planning solver, with an exhaustive small-input comparison against linear search.",
+          "successCriteria": [
+            "State the monotonicity argument",
+            "Show termination and boundary behavior",
+            "Handle duplicate sorted values correctly"
+          ],
+          "project": "Capacity planner with verified search",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "def first_at_least(values, target):\n    left, right = 0, len(values)\n    while left < right:\n        middle = (left + right) // 2\n        if values[middle] < target:\n            left = middle + 1\n        else:\n            right = middle\n    return left\n",
+              "explanation": "Precondition: values is sorted in nondecreasing order. The result can equal len(values), meaning no element is large enough."
+            }
+          ]
+        },
+        {
+          "id": "d04",
+          "title": "Stacks, queues, heaps and two pointers",
+          "hours": 46,
+          "lessons": [
+            "A stack processes the most recently added item first; a queue processes the oldest. These are policies for ordering work. Use a deque for repeated removals at the front in Python. A heap keeps an extreme element available without maintaining a fully sorted sequence; it fits a stream of next-best choices.",
+            "Two-pointer and sliding-window techniques reuse work as boundaries move. Prove that each pointer advances at most n times and that the maintained state matches the current window. A monotone stack discards elements that can no longer affect future answers. The reason an item can be discarded is the central proof, not the stack syntax.",
+            "Build a task dispatcher with a queue for arriving work and a heap for priorities, then implement a separate window analyzer for session data. Test equal priorities and deterministic tie-breaking. Separate the abstract structure from the policy so you can replace a priority rule without rewriting storage."
+          ],
+          "task": "Implement a bracket checker, a bounded-window statistic and a priority dispatcher. Explain which access pattern justifies each data structure.",
+          "successCriteria": [
+            "Distinguish FIFO, LIFO and priority order",
+            "Prove an amortized bound for one scan",
+            "Preserve deterministic behavior for ties"
+          ],
+          "project": "Task dispatcher and stream analyzer",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "The Python tutorial",
+              "url": "https://docs.python.org/3/tutorial/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "d05",
+          "title": "Recursion, greedy proofs and first contests",
+          "hours": 46,
+          "lessons": [
+            "A recursive function reduces a problem to smaller instances. Identify the base case and a measure that strictly decreases. The call stack consumes memory and Python limits recursion depth, so a correct recursive idea may need an explicit stack for large inputs. Backtracking explores choices and restores state when leaving a branch.",
+            "A greedy algorithm commits to a local choice. To justify it, use an exchange argument, a stays-ahead argument or a structural property such as a matroid where appropriate. Passing a few examples is not a proof. Search deliberately for a counterexample to your proposed rule before investing in implementation.",
+            "Begin Codeforces practice with problems whose full statement you understand. Read constraints, derive a simple approach, manually work an example and only then code. After a contest, upsolve one missed problem: attempt again, use the smallest helpful hint, close the explanation and implement independently. Record the mistaken assumption, not just the accepted verdict."
+          ],
+          "task": "Solve a small set of official beginner problems and write a correctness argument for an original interval-selection task. Complete one timed practice session.",
+          "successCriteria": [
+            "Explain a recursion termination measure",
+            "Find a counterexample to a bad greedy rule",
+            "Produce an independent post-contest solution"
+          ],
+          "project": "First contest reflection and algorithm notebook",
+          "resources": [
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            },
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "graphs",
+      "title": "Graphs, dynamic programming and C++",
+      "description": "Translate mathematical structures into efficient implementations and disciplined state design.",
+      "hours": 240,
+      "color": "#e4bc65",
+      "prerequisites": [
+        "dsa"
+      ],
+      "modules": [
+        {
+          "id": "a01",
+          "title": "C++ for a Python programmer",
+          "hours": 48,
+          "lessons": [
+            "C++ compilation produces an executable before that executable runs. Compiler errors, linker errors and runtime failures occur at different stages. Begin with standard input/output, functions, vector, string, pair and standard algorithms. Use the language version supported by the judge; do not assume every local compiler feature is available there. After installing a supported compiler, a typical Clang/GCC command is c++ -std=c++20 -Wall -Wextra -Wpedantic main.cpp -o main. Run ./main on macOS/Linux. On Windows, use the executable name and run command produced by your chosen toolchain, such as .\\main.exe in PowerShell; MSVC uses different compiler options. A compiler installation and a text editor are separate tools.",
+            "Integer ranges are finite in ordinary C++ types. Signed overflow has undefined behavior, so choose a sufficiently wide type and ensure intermediate arithmetic uses it too. References and values differ: copying a large vector is different from passing a const reference. Understand lifetime before returning a reference or storing a pointer.",
+            "Port three solved Python algorithms to clear C++ and compare outputs using generated inputs. Compile with warnings and use sanitizers in local debugging when supported. Prefer standard containers and resource-owning objects over manual allocation. C++ becomes useful when you can explain memory, bounds and ownership, not merely type a shorter contest template."
+          ],
+          "task": "Port prefix sums, binary search and a priority queue to C++, including boundary tests and compiler warnings.",
+          "successCriteria": [
+            "Explain compilation versus execution",
+            "Avoid overflow in a large intermediate product",
+            "Identify value versus reference semantics"
+          ],
+          "project": "A small tested C++ algorithms library",
+          "resources": [
+            {
+              "title": "C++ getting started",
+              "url": "https://isocpp.org/get-started"
+            },
+            {
+              "title": "C++ Core Guidelines",
+              "url": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines"
+            },
+            {
+              "title": "Clang compiler user manual",
+              "url": "https://clang.llvm.org/docs/UsersManual.html"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "cpp",
+              "code": "#include <iostream>\n#include <vector>\n\nint main() {\n    std::vector<long long> minutes{15, 25, 40};\n    long long total = 0;\n    for (long long value : minutes) total += value;\n    std::cout << total << \"\\n\";\n}\n",
+              "explanation": "Compile with your supported C++ compiler and run the executable. Explain why total uses a wide integer type."
+            }
+          ]
+        },
+        {
+          "id": "a02",
+          "title": "Graph modeling, BFS and DFS",
+          "hours": 48,
+          "lessons": [
+            "A graph models entities as vertices and relationships as edges. Decide whether edges are directed, weighted or repeated, and whether a vertex can be isolated. An adjacency list uses memory proportional to vertices plus edges; a matrix can be useful for dense or small graphs. The representation follows the queries you need.",
+            "Breadth-first search explores an unweighted graph by distance layers. Depth-first search explores a branch before returning and is useful for reachability, components and dependency structure. Marking a vertex at the right moment prevents repeated work. On a disconnected graph, starting from one vertex does not visit every component.",
+            "Build a learning-prerequisite graph and detect a cycle with a directed-graph method. Then compute a shortest path through an unweighted map using BFS and parent pointers. Explain why a parent-pointer path is a witness, while a visited set alone only certifies reachability. Use an explicit stack when recursion could exceed the environment limit."
+          ],
+          "task": "Implement component counting, shortest unweighted path reconstruction and prerequisite-cycle detection.",
+          "successCriteria": [
+            "Model directed versus undirected edges correctly",
+            "Explain BFS distance optimality",
+            "Handle isolated vertices and disconnected components"
+          ],
+          "project": "Prerequisite explorer and route finder",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "from collections import deque\n\ndef distances(graph, start):\n    distance = {start: 0}\n    queue = deque([start])\n    while queue:\n        vertex = queue.popleft()\n        for neighbor in graph.get(vertex, []):\n            if neighbor not in distance:\n                distance[neighbor] = distance[vertex] + 1\n                queue.append(neighbor)\n    return distance\n",
+              "explanation": "This computes distances in an unweighted graph represented by adjacency lists. Vertices outside the reachable component are absent."
+            }
+          ]
+        },
+        {
+          "id": "a03",
+          "title": "Weighted paths, DSU and spanning trees",
+          "hours": 48,
+          "lessons": [
+            "Dijkstra repeatedly finalizes the smallest tentative distance and requires nonnegative edge weights for its standard proof. Bellman-Ford handles negative edges and can detect reachable negative cycles. A shortest path problem and a minimum spanning tree problem optimize different objects: a tree minimizing total edge weight need not preserve shortest routes from a source.",
+            "A disjoint-set union structure maintains a partition under merge operations. Path compression and union by size or rank make a long operation sequence very efficient. Kruskal sorts edges and joins different components, relying on a cut property. State what should happen when the graph is disconnected instead of assuming a spanning tree exists.",
+            "Implement algorithms with witness output: a reconstructed path or a set of tree edges. Compare small random instances against an exhaustive or simpler oracle. Include parallel edges, zero weights, unreachable vertices and very large distances. Choose a safe infinity representation that cannot overflow during relaxation."
+          ],
+          "task": "Build a network-planning tool with shortest routes and minimum-cost connectivity, and explain why the two answers can differ.",
+          "successCriteria": [
+            "State each algorithm’s assumptions",
+            "Validate a path or tree witness",
+            "Test a disconnected and a zero-weight case"
+          ],
+          "project": "Network planner",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "a04",
+          "title": "Dynamic programming as state compression",
+          "hours": 48,
+          "lessons": [
+            "Dynamic programming avoids recomputing equivalent subproblems. A state must contain all information from the past that future decisions need. Start from a brute-force recursion, identify repeated subproblems and define what each stored value means in a complete sentence. A table without a state definition is difficult to prove or debug.",
+            "Derive transitions by considering the final decision or the first decision. Specify base cases and an evaluation order that respects dependencies. Counting, feasibility and optimization can share a state space but use different combination operations. Be explicit about whether order matters; coin sequences and unordered coin combinations count different objects.",
+            "Practice one-dimensional choice DP, grid DP, knapsack and subsequence DP. Reconstruct an optimal solution instead of reporting only its value. Reduce memory only after proving which previous states remain necessary. Compare with brute force on tiny inputs and test unreachable states so an accidental default zero does not become a fake solution."
+          ],
+          "task": "Implement three original planning problems: weighted session selection, budgeted task selection and sequence alignment, each with a precise state definition.",
+          "successCriteria": [
+            "Explain why the state is sufficient",
+            "Prove transition coverage and base cases",
+            "Reconstruct at least one optimal solution"
+          ],
+          "project": "Dynamic-programming workbench",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "AtCoder Educational DP Contest",
+              "url": "https://atcoder.jp/contests/dp/tasks"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "def min_sessions(total, sizes):\n    unreachable = total + 1\n    best = [0] + [unreachable] * total\n    for amount in range(1, total + 1):\n        for size in sizes:\n            if 0 < size <= amount:\n                best[amount] = min(best[amount], best[amount-size] + 1)\n    return None if best[total] == unreachable else best[total]\n",
+              "explanation": "For nonnegative integer total and positive integer session sizes, best[a] is the minimum number of sessions totaling exactly a. Write down why the sentinel is large enough."
+            }
+          ]
+        },
+        {
+          "id": "a05",
+          "title": "Trees, topological order and mathematical tools",
+          "hours": 48,
+          "lessons": [
+            "A rooted tree gives every non-root vertex a unique parent and splits naturally into subtrees. Subtree DP combines child results; rerooting reuses information to answer for every possible root. A topological ordering exists for a directed acyclic graph and lets you evaluate dependency-based recurrences in a valid order.",
+            "Your mathematics background helps with gcd, modular arithmetic, combinatorics and exponentiation, but implementation still requires exact assumptions. Modular division is not ordinary division: an inverse exists only when the element is invertible modulo the chosen modulus. Fast exponentiation follows the binary expansion of the exponent and runs in logarithmically many multiplications.",
+            "Build a prerequisite scheduler that computes a valid order and a critical path for a DAG. Reject cycles with a useful explanation. Add a combinatorics utility tested against exact small values. Distinguish mathematical correctness from representation limits and document any prime-modulus assumptions."
+          ],
+          "task": "Create a dependency scheduler plus tested gcd, modular exponentiation and binomial-coefficient utilities.",
+          "successCriteria": [
+            "Detect when a topological order is impossible",
+            "Explain the modular-inverse precondition",
+            "Compute a critical-path witness"
+          ],
+          "project": "Dependency scheduler and mathematics toolkit",
+          "resources": [
+            {
+              "title": "Introduction to Algorithms, 6.006",
+              "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            },
+            {
+              "title": "AtCoder Educational DP Contest",
+              "url": "https://atcoder.jp/contests/dp/tasks"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "competitive",
+      "title": "Competitive programming depth",
+      "description": "Build range structures, discover reductions and train with honest contest evidence.",
+      "hours": 260,
+      "color": "#f0719b",
+      "prerequisites": [
+        "graphs"
+      ],
+      "modules": [
+        {
+          "id": "c01",
+          "title": "Range queries and algebraic structure",
+          "hours": 52,
+          "lessons": [
+            "A range-query structure summarizes intervals. A segment tree works when summaries combine associatively with an identity; the summary may be a sum, minimum or a richer tuple. Define the combine operation before writing tree code. A Fenwick tree is compact for suitable prefix-aggregate operations and often easier to implement.",
+            "Lazy propagation delays an update while retaining enough information to apply it later. You need both a way to apply an update to a node summary and a correct order for composing pending updates. Assignment and addition do not commute, so storing only a numeric tag without its meaning is not enough.",
+            "Implement a naive array oracle and compare thousands of deterministic random update/query sequences. Include empty boundaries according to your chosen API, single elements and full-range changes. This is a place where property-based testing and algebra reinforce each other: identity and associativity laws become executable checks."
+          ],
+          "task": "Build a range-statistics engine with point updates, range sums and then range-add updates. Compare every operation with a naive model.",
+          "successCriteria": [
+            "Define the algebra of summaries",
+            "Explain lazy-tag composition order",
+            "Pass randomized differential checks"
+          ],
+          "project": "Verified range-query library",
+          "resources": [
+            {
+              "title": "Design and Analysis of Algorithms, 6.046J",
+              "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/"
+            },
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            },
+            {
+              "title": "Hypothesis documentation",
+              "url": "https://hypothesis.readthedocs.io/en/latest/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "c02",
+          "title": "Advanced graph and tree techniques",
+          "hours": 52,
+          "lessons": [
+            "Lowest common ancestor queries can be accelerated by binary lifting after tree preprocessing. Euler-tour intervals turn subtree membership into a range relation. Heavy-light decomposition separates a path into a small number of chain intervals. Each technique trades preprocessing and memory for faster repeated queries.",
+            "Strongly connected components compress directed cycles into a DAG. Bridges and articulation points require careful low-link invariants; an undirected parent edge must be distinguished from other edges, especially with parallel edges. For flow, model capacities and conservation clearly before implementing an augmenting-path algorithm.",
+            "Choose techniques from a problem’s structure instead of memorized keywords. Explain a reduction in both directions: why a valid original solution produces a feasible transformed solution, and how the transformed result maps back. Test the model on a hand-built counterexample before optimizing the data structure."
+          ],
+          "task": "Implement LCA and SCC, then model an assignment task as flow. Document one case that breaks an incorrect model.",
+          "successCriteria": [
+            "State preprocessing and query costs",
+            "Handle multi-edge assumptions explicitly",
+            "Prove the assignment reduction"
+          ],
+          "project": "Graph toolkit with model explanations",
+          "resources": [
+            {
+              "title": "Design and Analysis of Algorithms, 6.046J",
+              "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            },
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "c03",
+          "title": "Strings, geometry and harder DP",
+          "hours": 52,
+          "lessons": [
+            "String algorithms exploit repeated structure. A prefix-function or Z-function supports linear-time pattern work without comparing every pair of positions. Rolling hashes are probabilistic unless collisions are eliminated or verified; state the collision assumption and never equate equal hashes with a universal proof of equal strings.",
+            "Computational geometry translates orientation and distance into arithmetic predicates. An orientation test uses a cross product; choose types wide enough for products and handle collinear points consistently. Floating-point equality is rarely a safe geometric policy. Define how degenerate cases such as duplicate points should behave.",
+            "Extend dynamic programming to subsets, intervals and trees. A bitmask state may use O(2^n) memory or time, so constraints determine whether it is appropriate. Apply optimizations only after checking their mathematical preconditions. A faster recurrence with an invalid monotonicity assumption is simply a different wrong program."
+          ],
+          "task": "Implement a string matcher, an integer-orientation helper and one subset-DP solver, each compared against a small brute-force implementation.",
+          "successCriteria": [
+            "Explain hash uncertainty when using hashing",
+            "Test collinear and repeated points",
+            "Estimate state count before allocating DP memory"
+          ],
+          "project": "Advanced algorithms experiments",
+          "resources": [
+            {
+              "title": "Design and Analysis of Algorithms, 6.046J",
+              "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/"
+            },
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "c04",
+          "title": "Contest process and deliberate upsolving",
+          "hours": 52,
+          "lessons": [
+            "A contest tests prioritization under time limits as well as algorithms. Scan the set, estimate which problems you understand and secure solvable points before sinking time into an uncertain idea. Write constraints and the critical invariant beside the code. Keep a short checklist for indexing, overflow, input format and multiple test cases.",
+            "Afterward, classify missed work by observable cause: misunderstood requirement, missing technique, incorrect proof, implementation defect or poor time allocation. Choose the next exercise from that evidence. If an explanation is needed, read only enough to unblock the idea, then close it and reconstruct the solution independently.",
+            "Use a spaced review: re-solve a meaningful missed problem after a few days and again later with changed constraints. Track independent solutions, explanation quality and error recurrence alongside rating. Follow each platform’s rules on AI assistance, collaboration and sharing; a practice tool must never become hidden assistance during a restricted contest."
+          ],
+          "task": "Complete four timed practice contests with four written reviews and re-solve selected misses without notes.",
+          "successCriteria": [
+            "Record honest contest conditions",
+            "Show a repaired misconception in a new problem",
+            "Choose the next practice set from evidence"
+          ],
+          "project": "Contest journal with delayed re-solves",
+          "resources": [
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            },
+            {
+              "title": "Codeforces API",
+              "url": "https://codeforces.com/apiHelp"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "c05",
+          "title": "ICPC-style team training and assessment",
+          "hours": 52,
+          "lessons": [
+            "Team competition requires shared situational awareness. Three people should communicate what they are solving, which assumptions remain uncertain and when they need a second pair of eyes. Rehearse the environment permitted by the event. Check current ICPC eligibility and regional rules; completing a course does not establish eligibility.",
+            "Run a long mock contest with explicit roles that can change: problem exploration, implementation and verification. Practice handing off a partially solved problem using a state definition and a small example. A reviewer should look for an independent counterexample rather than merely reread the author’s reasoning.",
+            "Assess readiness across several unseen sets. Record the strongest level you can solve independently and reliably, not the hardest solution you once copied. A Codeforces rating is an outcome of live performance and cannot be guaranteed by a fixed number of study hours. Select advanced topics from actual bottlenecks rather than chasing a badge."
+          ],
+          "task": "Run two team-style mock contests or simulate handoffs with a peer, then produce an evidence-based training plan for the next eight weeks.",
+          "successCriteria": [
+            "Give a clear algorithm handoff",
+            "Verify current event rules before registration",
+            "Separate independent performance from assisted practice"
+          ],
+          "project": "Competition-readiness portfolio",
+          "resources": [
+            {
+              "title": "ICPC regional rules",
+              "url": "https://icpc.global/regionals/rules"
+            },
+            {
+              "title": "Codeforces problemset",
+              "url": "https://codeforces.com/problemset"
+            },
+            {
+              "title": "CSES Problem Set",
+              "url": "https://cses.fi/problemset/"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "backend",
+      "title": "Build software people can use",
+      "description": "Create a real API, store data safely and understand the browser-to-database journey.",
+      "hours": 230,
+      "color": "#6dc9d2",
+      "prerequisites": [
+        "python",
+        "git",
+        "dsa"
+      ],
+      "modules": [
+        {
+          "id": "b01",
+          "title": "The web, HTTP and a useful interface",
+          "hours": 46,
+          "lessons": [
+            "A browser sends requests and renders responses. A URL identifies a resource; HTTP defines methods, headers, status codes and bodies. A server process receives requests, runs application logic and returns a response. localhost refers to the current machine, so a local development server is not automatically a public website.",
+            "HTML gives content structure, CSS controls presentation and JavaScript adds browser behavior. Start with semantic headings, labels, buttons and forms so keyboard and assistive-technology users can operate the interface. A three-dimensional scene may aid exploration, but the core learning tasks must remain accessible without motion or a powerful graphics device.",
+            "Build a small practice-log interface that works with ordinary form controls before adding visual effects. Inspect a network request in browser developer tools and identify method, URL, status and JSON response. Display loading, empty and failure states honestly so a network failure is not mistaken for a saved change."
+          ],
+          "task": "Create a responsive practice-log page with a form, history list and accessible keyboard navigation. Inspect and explain one HTTP request.",
+          "successCriteria": [
+            "Associate labels with inputs",
+            "Handle loading and failure states",
+            "Explain client, server and localhost"
+          ],
+          "project": "Accessible practice-log interface",
+          "resources": [
+            {
+              "title": "Learn web development",
+              "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "b02",
+          "title": "API contracts and Python services",
+          "hours": 46,
+          "lessons": [
+            "An API is a contract between callers and a service. Define request shapes, response shapes and error behavior before choosing routes. A request to create a study session should validate duration and timestamps. Reject invalid input at the service boundary even if the browser already validated it; another client can call the API directly.",
+            "Keep routing, domain logic and storage responsibilities distinct. A function that computes a summary should not need to know about HTTP headers. Use FastAPI’s type-driven models to describe input and output, but understand which rules still require explicit domain validation. Return consistent errors and avoid leaking internal tracebacks or secrets to callers.",
+            "Implement create, list and summary endpoints with pagination and stable ordering where lists can grow. Consider retry behavior: if a client repeats a request after a timeout, could it create a duplicate record? For important writes, an idempotency mechanism can make a repeated logical operation safe."
+          ],
+          "task": "Implement the practice-log API with validated input, deterministic errors, pagination and an explicit duplicate-request policy.",
+          "successCriteria": [
+            "Reject invalid input at the server",
+            "Test behavior independently of routing",
+            "Document successful and failed requests"
+          ],
+          "project": "Practice-log API",
+          "resources": [
+            {
+              "title": "FastAPI tutorial",
+              "url": "https://fastapi.tiangolo.com/tutorial/"
+            },
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "b03",
+          "title": "Relational data and transactions",
+          "hours": 46,
+          "lessons": [
+            "A relational database stores tables of rows governed by constraints. A primary key identifies a row, a foreign key links related rows and a unique constraint encodes a uniqueness rule. Design a schema from the facts you need to preserve; avoid storing several conflicting copies of the same truth.",
+            "SQL selects, joins and aggregates sets of records. Parameterized queries separate values from query structure and prevent values from being interpreted as SQL code. An index speeds some access patterns while adding storage and write cost. Inspect a query plan before assuming another index will improve a slow query.",
+            "A transaction groups operations with defined consistency and isolation behavior. Consider two concurrent requests that both read a remaining balance before updating it: code that is correct in a single-user test may lose an update. Express invariants with database constraints and appropriate transaction logic, then test competing operations."
+          ],
+          "task": "Store users, sessions and goals in PostgreSQL. Add migrations, a useful index and a transaction protecting a shared goal update.",
+          "successCriteria": [
+            "Enforce a data invariant in the database",
+            "Use parameterized queries",
+            "Demonstrate behavior under two concurrent updates"
+          ],
+          "project": "Persistent learning service",
+          "resources": [
+            {
+              "title": "PostgreSQL tutorial",
+              "url": "https://www.postgresql.org/docs/current/tutorial.html"
+            },
+            {
+              "title": "FastAPI tutorial",
+              "url": "https://fastapi.tiangolo.com/tutorial/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "b04",
+          "title": "Identity, authorization and external integrations",
+          "hours": 46,
+          "lessons": [
+            "Authentication answers who is calling; authorization answers what that identity may do. A signed-in user must not be able to read another user’s private progress by changing an ID. Enforce ownership on the server for each protected operation. UI visibility is not an authorization boundary.",
+            "For GitHub integration, use an installation-based GitHub App or an appropriate OAuth flow with narrowly scoped permissions and server-managed credentials. Let the learner select a repository and review the exact diff before a write. Creating a local commit, pushing a branch and opening a pull request are separate observable actions.",
+            "Treat webhook payloads as untrusted input, verify signatures, and design for duplicate or out-of-order deliveries. Never place an app private key or privileged token in browser storage or a public bundle. Provide a disconnect path and a clear explanation of what data is read or written. Use test repositories until the flow is verified."
+          ],
+          "task": "Design and implement an ownership-checked API and a GitHub integration adapter in a test repository, with a preview-before-publish workflow.",
+          "successCriteria": [
+            "An unrelated user cannot read or change private progress",
+            "Credentials stay on the server",
+            "A repeated webhook does not duplicate a contribution"
+          ],
+          "project": "Secure contribution workflow prototype",
+          "resources": [
+            {
+              "title": "Building GitHub Apps",
+              "url": "https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps"
+            },
+            {
+              "title": "FastAPI tutorial",
+              "url": "https://fastapi.tiangolo.com/tutorial/"
+            },
+            {
+              "title": "Web Security Testing Guide",
+              "url": "https://owasp.org/projects/web-security-testing-guide"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "b05",
+          "title": "Concurrency, background jobs and deployment",
+          "hours": 46,
+          "lessons": [
+            "Concurrent work overlaps in time; parallel work executes simultaneously. Async I/O can keep a service responsive while waiting on network or disk operations, but it does not make CPU-heavy Python work automatically faster. A long code-evaluation job belongs outside the request path so a browser request does not hold a server worker indefinitely.",
+            "A job queue separates accepting work from executing it. Track queued, running, succeeded and failed states with a stable job ID. Retries require idempotent work or deduplication. Bound attempts and duration, expose useful errors and distinguish a failed job from a disconnected client.",
+            "Package the service reproducibly, configure it through environment-specific settings, and deploy first to a controlled test environment. Define health checks, logs, backups and a rollback plan. Running learner-submitted code needs a separately isolated execution service with resource and network restrictions; an ordinary API process is not a safe code sandbox."
+          ],
+          "task": "Move report generation into a background worker, deploy a test instance and demonstrate failure recovery with a documented rollback procedure.",
+          "successCriteria": [
+            "Repeated work does not corrupt state",
+            "A failed worker produces an observable job result",
+            "Restore a previous release or backup in a rehearsal"
+          ],
+          "project": "Deployed learning-service beta",
+          "resources": [
+            {
+              "title": "Docker getting started",
+              "url": "https://docs.docker.com/get-started/"
+            },
+            {
+              "title": "FastAPI tutorial",
+              "url": "https://fastapi.tiangolo.com/tutorial/"
+            },
+            {
+              "title": "OpenTelemetry documentation",
+              "url": "https://opentelemetry.io/docs/"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "quality",
+      "title": "Testing, security and reliability",
+      "description": "Find meaningful failures, build reproducible evidence and operate with measurable limits.",
+      "hours": 220,
+      "color": "#ae94e8",
+      "prerequisites": [
+        "backend",
+        "graphs"
+      ],
+      "modules": [
+        {
+          "id": "q01",
+          "title": "Test design from risk and requirements",
+          "hours": 44,
+          "lessons": [
+            "A test plan starts with behavior that matters to users and the consequences of failure. Partition inputs into meaningful classes, then select boundaries and interactions. A duration field needs cases such as zero, negative, very large, malformed and valid values. The point is to test assumptions, not maximize the number of nearly identical assertions.",
+            "Unit tests isolate small rules, integration tests exercise boundaries such as a database, and end-to-end tests follow a user journey through the system. Use the cheapest level that can detect a risk faithfully. Excessive mocking can test a fictional system; excessive browser testing can make a suite slow and hard to diagnose.",
+            "Write a regression test that fails for the original bug before applying the fix. Use deterministic data and independent state so tests do not depend on execution order. Coverage identifies code that was not exercised; high coverage does not prove that assertions are meaningful or that requirements are complete."
+          ],
+          "task": "Write a risk-based test plan for the learning service and reproduce three deliberately seeded bugs with failing tests before fixing them.",
+          "successCriteria": [
+            "Map each important test to a behavior or risk",
+            "Demonstrate a pre-fix failure",
+            "Run tests in isolation and in a different order"
+          ],
+          "project": "Behavior-focused test suite",
+          "resources": [
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            },
+            {
+              "title": "Playwright documentation",
+              "url": "https://playwright.dev/docs/intro"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "q02",
+          "title": "Properties, fuzzing and differential checks",
+          "hours": 44,
+          "lessons": [
+            "Example tests check chosen points; properties describe a family of valid behaviors. Sorting should preserve the multiset of values and produce nondecreasing output. Encoding and decoding should round-trip supported values. Choose properties that can reject a plausible incorrect implementation, rather than assertions true for every output.",
+            "Property-based tools generate inputs and reduce a failure to a smaller counterexample. Differential testing compares independently implemented approaches. Metamorphic testing checks predictable changes when input is transformed, useful when computing an exact oracle is expensive. Each technique still depends on a well-defined input domain.",
+            "Fuzz parsers and API boundaries in an authorized local environment with bounded resources. Preserve the seed, software version and minimized failing input. Separate crash discovery from impact assessment: a malformed request causing a controlled validation error may be expected, whereas corrupted state after rejection is a defect."
+          ],
+          "task": "Add property tests to the algorithm library and a structured-input fuzz harness to the notebook importer. Save minimized reproductions.",
+          "successCriteria": [
+            "Use at least one independent oracle",
+            "State each property’s domain",
+            "Reproduce a generated failure deterministically"
+          ],
+          "project": "Property and fuzz testing report",
+          "resources": [
+            {
+              "title": "Hypothesis documentation",
+              "url": "https://hypothesis.readthedocs.io/en/latest/"
+            },
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            }
+          ],
+          "codeExamples": [
+            {
+              "language": "python",
+              "code": "from hypothesis import given, strategies as st\nfrom collections import Counter\n\n@given(st.lists(st.integers()))\ndef test_sort_preserves_values(values):\n    result = sorted(values)\n    assert Counter(result) == Counter(values)\n    assert all(a <= b for a, b in zip(result, result[1:]))\n",
+              "explanation": "Replace sorted with your own sorting implementation when using this as a real check. Multiplicity preservation and ordering are independent properties."
+            }
+          ]
+        },
+        {
+          "id": "q03",
+          "title": "Performance and reliability experiments",
+          "hours": 44,
+          "lessons": [
+            "Performance has multiple dimensions: latency, throughput, memory and cost. Measure percentiles, not just a mean, because a few slow requests can strongly affect users. State the workload, hardware, concurrency, dataset and warm-up conditions so another person can interpret the measurement.",
+            "A profiler shows where time or allocations are spent in a particular run. Optimize a measured bottleneck and compare against the same baseline. A load test should include realistic reads, writes and failures, not only a cached home page. Gradually increase load in an environment you control and watch saturation, queue length and error rates.",
+            "Define a service-level objective from user experience, such as a chosen latency threshold for successful reads over a stated window. Logs explain individual events, metrics summarize trends and traces connect work across services. Alert on actionable symptoms and rehearse what an operator should do when an alert fires."
+          ],
+          "task": "Measure a baseline, identify one bottleneck and demonstrate an improvement. Publish a reproducible load profile and a capacity limit with evidence.",
+          "successCriteria": [
+            "Report p50 and p95 alongside errors",
+            "State the test environment and workload",
+            "Avoid claiming population-scale readiness from a local benchmark"
+          ],
+          "project": "Performance and observability dossier",
+          "resources": [
+            {
+              "title": "OpenTelemetry documentation",
+              "url": "https://opentelemetry.io/docs/"
+            },
+            {
+              "title": "Site Reliability Engineering",
+              "url": "https://sre.google/sre-book/table-of-contents/"
+            },
+            {
+              "title": "The Missing Semester",
+              "url": "https://missing.csail.mit.edu/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "q04",
+          "title": "Security review and failure boundaries",
+          "hours": 44,
+          "lessons": [
+            "Security begins with a threat model: identify assets, actors, trust boundaries and plausible misuse. For a learning site, private progress, OAuth tokens and code-execution infrastructure need separate protections. Validate and authorize at the server boundary; a hidden button or a browser-only check cannot protect a privileged action.",
+            "Test injection, broken access control, unsafe file handling and cross-site scripting in your own test application. Encode output in its destination context and avoid turning untrusted text into executable HTML. Secrets must not appear in repositories, logs or generated artifacts. Use dependency updates and a review process that can address newly discovered vulnerabilities.",
+            "For uploaded or submitted code, isolation is an architectural requirement: separate workers, restricted filesystem and network access, resource quotas, timeouts and cleanup. A language interpreter alone is not isolation. Document residual risks and require an independent review before exposing execution to arbitrary public users."
+          ],
+          "task": "Create a threat model and verify ownership checks, output handling, secret storage and execution boundaries in a controlled test environment.",
+          "successCriteria": [
+            "Demonstrate a blocked cross-user request",
+            "Find no privileged credential in the client bundle",
+            "Describe the boundary around untrusted code execution"
+          ],
+          "project": "Security review with reproducible checks",
+          "resources": [
+            {
+              "title": "Web Security Testing Guide",
+              "url": "https://owasp.org/projects/web-security-testing-guide"
+            },
+            {
+              "title": "Building GitHub Apps",
+              "url": "https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "q05",
+          "title": "CI, release safety and incident learning",
+          "hours": 44,
+          "lessons": [
+            "A delivery pipeline should make the safe path repeatable: install known dependencies, run relevant checks, build one artifact and promote that artifact through environments. Separate untrusted contribution checks from jobs with deployment credentials. Pin and review third-party automation according to the project’s security policy.",
+            "Releases can fail even after tests pass. Use migrations that fit the deployment order, feature flags where appropriate and a rollback or forward-fix strategy. Backups matter only if restoration works, so rehearse restoring representative data. Track who can deploy and how changes are audited.",
+            "Run a game day: introduce a harmless failure in a test environment and respond using your runbook. Write a blameless incident report describing impact, timeline, contributing conditions and corrective actions. An action should improve the system, such as a missing invariant check, rather than simply telling someone to be more careful."
+          ],
+          "task": "Build a release pipeline, rehearse a failed deployment and restore a backup. Write an incident report with measurable corrective actions.",
+          "successCriteria": [
+            "A failed required check stops promotion",
+            "Restore data in a rehearsal",
+            "Connect each incident action to an observed failure"
+          ],
+          "project": "Release and incident playbook",
+          "resources": [
+            {
+              "title": "GitHub Actions",
+              "url": "https://docs.github.com/en/actions"
+            },
+            {
+              "title": "Site Reliability Engineering",
+              "url": "https://sre.google/sre-book/table-of-contents/"
+            },
+            {
+              "title": "Docker getting started",
+              "url": "https://docs.docker.com/get-started/"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "contribution",
+      "title": "Open source and expert code evaluation",
+      "description": "Contribute useful changes and evaluate code with evidence that another engineer can reproduce.",
+      "hours": 220,
+      "color": "#e49c6c",
+      "prerequisites": [
+        "git",
+        "quality",
+        "competitive"
+      ],
+      "modules": [
+        {
+          "id": "o01",
+          "title": "Finding and understanding a real project",
+          "hours": 44,
+          "lessons": [
+            "Choose an active project whose purpose you can explain and whose setup you can reproduce. Read its README, license, contribution guide and code of conduct before proposing changes. A beginner-friendly label is an invitation to investigate, not a guarantee that an issue is unclaimed or easy.",
+            "Trace one user action through the codebase: entry point, domain logic, persistence and tests. Make a small diagram and note which files own which behavior. Run the existing checks before changing code so you can distinguish a pre-existing failure from one you introduced.",
+            "Start with a useful reproduction, documentation correction or focused test when that meets a real need. Avoid creating issues and pull requests merely to increase profile activity. Respect maintainer time, ask a precise question only after checking available guidance, and accept that a valid contribution may still be outside project scope."
+          ],
+          "task": "Select a real project, reproduce its setup and produce an architecture note plus one concrete, scoped contribution proposal.",
+          "successCriteria": [
+            "Explain the project’s user problem",
+            "Record the baseline check results",
+            "Follow the project’s contribution guidance"
+          ],
+          "project": "Open-source project investigation",
+          "resources": [
+            {
+              "title": "Pull request guide",
+              "url": "https://docs.github.com/en/pull-requests/get-started"
+            },
+            {
+              "title": "Pro Git, second edition",
+              "url": "https://git-scm.com/book/en/v2"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "o02",
+          "title": "From bug report to reviewed change",
+          "hours": 44,
+          "lessons": [
+            "A useful bug report separates expected behavior, observed behavior and reproduction steps. Include relevant version information and the smallest non-sensitive example. Reproduce the issue locally, then find the responsible boundary before deciding how broad the fix should be.",
+            "Write a failing regression test, implement the smallest coherent correction and consider adjacent cases. Review your own diff for unrelated formatting, accidental files and exposed secrets. Explain the cause and user-visible effect in the pull request so a reviewer does not need the entire chat history.",
+            "After feedback, update the implementation and tests together. Resolve comments by showing evidence or explaining a tradeoff. A maintainer’s acceptance is outside your control; the evidence you can control is a clear reproduction, sound fix, relevant tests and respectful review participation. Do not claim an unmerged proposal as a merged contribution."
+          ],
+          "task": "Prepare a real or project-approved bug fix through review, with a regression test and a concise change explanation.",
+          "successCriteria": [
+            "Demonstrate the original failure",
+            "Keep the diff focused",
+            "Report contribution status accurately"
+          ],
+          "project": "Reviewable bug-fix pull request",
+          "resources": [
+            {
+              "title": "Pull request guide",
+              "url": "https://docs.github.com/en/pull-requests/get-started"
+            },
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "o03",
+          "title": "Evaluating AI-generated code",
+          "hours": 44,
+          "lessons": [
+            "Code evaluation asks whether an artifact satisfies a specification under stated constraints. Define criteria before looking at the candidate: functional correctness, edge cases, complexity, security, maintainability and instruction adherence. Weight criteria by the task’s actual purpose rather than by superficial style preferences.",
+            "Run candidate code only in an appropriately isolated environment. Construct counterexamples, inspect dependencies and verify claimed outputs. A fluent explanation can accompany a wrong implementation, so use executable evidence and independent reasoning. Distinguish a definite defect from a concern that requires more information.",
+            "Write a concise review containing the requirement, the observed violation, a reproducing input and its impact. Avoid preferences masquerading as bugs. When comparing two candidates, use the same evaluation conditions and disclose ties or uncertainty. Follow the hiring platform’s rules on outside assistance and confidentiality during real assessments."
+          ],
+          "task": "Evaluate three original candidate solutions with a written rubric, isolated checks and one independently verified counterexample for each incorrect candidate.",
+          "successCriteria": [
+            "Apply the same criteria consistently",
+            "Support defect claims with evidence",
+            "Separate correctness from stylistic preference"
+          ],
+          "project": "Code-evaluation sample pack",
+          "resources": [
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            },
+            {
+              "title": "Hypothesis documentation",
+              "url": "https://hypothesis.readthedocs.io/en/latest/"
+            },
+            {
+              "title": "Web Security Testing Guide",
+              "url": "https://owasp.org/projects/web-security-testing-guide"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "o04",
+          "title": "Benchmarks, rubrics and reviewer calibration",
+          "hours": 44,
+          "lessons": [
+            "A benchmark is a measurement instrument. Define the capability it is intended to measure and collect tasks that represent that capability. Include clear expected behavior and sufficient environment information. If tasks accidentally reveal their own answers, scores may measure leakage rather than skill.",
+            "Separate a development set used to refine the evaluator from an unseen evaluation set. Track sources and permissions for task content. Original tasks and licensed datasets are preferable to copying restricted interview or contest material. A strong mathematical background helps detect ambiguous requirements and multiple valid solutions.",
+            "Have two reviewers independently score a sample, then compare disagreements. Clarify rubric wording when reviewers interpret it differently and record adjudication decisions. Report uncertainty and sample size. A precise-looking score from a tiny, biased set should not be presented as a comprehensive ranking of engineering ability."
+          ],
+          "task": "Create ten original evaluation tasks with rubrics and reference checks, calibrate a subset with a peer, and publish an anonymized disagreement analysis.",
+          "successCriteria": [
+            "No answer leakage into evaluated inputs",
+            "Document content provenance",
+            "Explain one rubric revision caused by disagreement"
+          ],
+          "project": "Original evaluation benchmark",
+          "resources": [
+            {
+              "title": "Hypothesis documentation",
+              "url": "https://hypothesis.readthedocs.io/en/latest/"
+            },
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "o05",
+          "title": "Portfolio, applications and sustainable work",
+          "hours": 44,
+          "lessons": [
+            "A portfolio should make your contribution easy to assess. Choose a few projects with clear users, working instructions, tests, design tradeoffs and a history of improvements. Include an honest account of what you built, where you received help and which parts remain incomplete. Useful maintenance often says more than many abandoned repositories.",
+            "For expert-work platforms such as micro1, Mercor, Outlier and possibly the intended company AfterQuery, inspect current official opportunities and terms. Eligibility, available projects, rates and payment arrangements vary. Advertised high rates are not a promise of selection, continuous work or equivalent take-home income.",
+            "Practice explaining a recent bug, an algorithm proof and a design tradeoff without reading notes. Build evidence of communication, reliability and review skill alongside contest results. Senior engineering roles require demonstrated judgment and sustained responsibility in real systems; a course and 2,000 study hours cannot guarantee that title or a $100-per-hour role."
+          ],
+          "task": "Prepare a portfolio with three strong artifacts, a truthful skill-evidence table and mock interviews tailored to current official role requirements.",
+          "successCriteria": [
+            "Link claims to inspectable work",
+            "Distinguish rate advertisements from guaranteed earnings",
+            "Explain your own design and debugging decisions"
+          ],
+          "project": "Evidence-based application portfolio",
+          "resources": [
+            {
+              "title": "micro1 expert opportunities",
+              "url": "https://www.micro1.ai/"
+            },
+            {
+              "title": "Mercor opportunities",
+              "url": "https://www.mercor.com/"
+            },
+            {
+              "title": "Outlier opportunities",
+              "url": "https://outlier.ai/"
+            },
+            {
+              "title": "AfterQuery",
+              "url": "https://www.afterquery.com/"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    },
+    {
+      "id": "capstone",
+      "title": "Ship, operate and defend a capstone",
+      "description": "Bring algorithms, collaboration and engineering together in a maintained product.",
+      "hours": 240,
+      "color": "#9dc76c",
+      "prerequisites": [
+        "backend",
+        "quality",
+        "contribution"
+      ],
+      "modules": [
+        {
+          "id": "x01",
+          "title": "Product scope and architecture",
+          "hours": 48,
+          "lessons": [
+            "Choose a capstone with a real user and a narrow first promise, such as a contest-review coach or contribution planner. Interview a few potential users and write observable success criteria. Prioritize a complete core journey over a large list of disconnected features.",
+            "Define the main entities, API contracts, trust boundaries and deployment components. Write an architecture decision record for important choices, including alternatives and conditions that would change the decision. A modular service may be easier to operate than many small services at this stage; choose from actual constraints.",
+            "Estimate data growth, workload and costs using explicit assumptions. Distinguish registered users from simultaneous active requests. Identify which measurements would justify a different design. Turn uncertain assumptions into experiments, and keep the scope small enough that you can test, deploy and maintain it."
+          ],
+          "task": "Produce a scoped product brief, architecture diagram, data model and three decision records, reviewed against one real user journey.",
+          "successCriteria": [
+            "State measurable acceptance criteria",
+            "Expose assumptions behind capacity estimates",
+            "Choose architecture from requirements"
+          ],
+          "project": "Capstone specification and design",
+          "resources": [
+            {
+              "title": "FastAPI tutorial",
+              "url": "https://fastapi.tiangolo.com/tutorial/"
+            },
+            {
+              "title": "PostgreSQL tutorial",
+              "url": "https://www.postgresql.org/docs/current/tutorial.html"
+            },
+            {
+              "title": "Site Reliability Engineering",
+              "url": "https://sre.google/sre-book/table-of-contents/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "x02",
+          "title": "A complete working slice",
+          "hours": 48,
+          "lessons": [
+            "Build one end-to-end journey through interface, API, database and background work. For a contest-review coach, that might be importing a permitted public submission record, adding a private reflection and scheduling a review. A complete slice reveals integration risks earlier than finishing all database tables first.",
+            "Use official APIs within their limits and provide clear fallbacks when they are unavailable. Codeforces documents public metadata APIs with rate limits; central caching can reduce repeated requests. An external handle typed into a form does not prove account ownership. Distinguish a public profile lookup from authenticated linking.",
+            "Preserve provenance for imported data and allow users to correct or remove their own annotations. Make partial failure visible. If the external service succeeds but saving locally fails, design a recoverable state instead of showing an unqualified success message. Review the actual end-to-end behavior with a fresh test account."
+          ],
+          "task": "Deliver one complete user journey with persistence, a real permitted API integration and an explicit failure-recovery path.",
+          "successCriteria": [
+            "Data survives refresh and restart",
+            "Respect API limits and authentication boundaries",
+            "Report partial failure accurately"
+          ],
+          "project": "Capstone working alpha",
+          "resources": [
+            {
+              "title": "Codeforces API",
+              "url": "https://codeforces.com/apiHelp"
+            },
+            {
+              "title": "Building GitHub Apps",
+              "url": "https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps"
+            },
+            {
+              "title": "Playwright documentation",
+              "url": "https://playwright.dev/docs/intro"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "x03",
+          "title": "Independent review and five validation rounds",
+          "hours": 48,
+          "lessons": [
+            "Use five different validation rounds to expose different classes of failure. Round one checks domain behavior and data invariants. Round two exercises API, database and integration boundaries. Round three follows user journeys in supported browsers, mobile layouts and keyboard-only operation.",
+            "Round four examines security and privacy boundaries in an authorized test environment, including cross-user access, credential handling and untrusted inputs. Round five measures performance, recovery and release readiness under a documented workload. These are distinct investigations; rerunning the same happy-path test five times is weak evidence.",
+            "Ask a reviewer who did not implement the feature to inspect the highest-risk paths. Record defects with severity, reproduction steps and disposition. Fix material defects and rerun affected checks. Report tested environments and known limits honestly: no finite test suite proves that a nontrivial website is error-free."
+          ],
+          "task": "Complete five documented validation rounds, fix discovered defects and publish a concise report with evidence and remaining limits.",
+          "successCriteria": [
+            "Every round has a distinct purpose",
+            "Recheck repaired behavior",
+            "Do not equate five passes with universal correctness"
+          ],
+          "project": "Five-round validation report",
+          "resources": [
+            {
+              "title": "pytest documentation",
+              "url": "https://docs.pytest.org/en/stable/"
+            },
+            {
+              "title": "Playwright documentation",
+              "url": "https://playwright.dev/docs/intro"
+            },
+            {
+              "title": "Web Security Testing Guide",
+              "url": "https://owasp.org/projects/web-security-testing-guide"
+            },
+            {
+              "title": "Site Reliability Engineering",
+              "url": "https://sre.google/sre-book/table-of-contents/"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "x04",
+          "title": "Launch a measured pilot and operate it",
+          "hours": 48,
+          "lessons": [
+            "Invite a controlled pilot group after the core acceptance checks pass. Observe whether users can complete the intended task and where they abandon it. Collect only data needed for the product, explain its purpose and offer deletion where appropriate. Private learning diagnostics should not silently become public rankings.",
+            "Watch service metrics, error reports and user feedback during the pilot. Establish a support and incident path, a backup schedule and an owner for updates. Rehearse revoking an integration credential and restoring a recent backup. A working demo becomes a service only when someone can operate it through failures.",
+            "Increase exposure gradually using measured headroom and response plans. Thousands of accounts or hundreds of thousands of users require capacity, cost and abuse controls validated in the actual hosting environment. A local performance run is useful evidence for one setup, not a certificate of unlimited scale."
+          ],
+          "task": "Run a small consent-based pilot, fix its top usability issue and demonstrate recovery and credential revocation in the test environment.",
+          "successCriteria": [
+            "Pilot users complete the core journey",
+            "Monitoring distinguishes failure from inactivity",
+            "State measured capacity and scaling unknowns"
+          ],
+          "project": "Operated capstone beta",
+          "resources": [
+            {
+              "title": "OpenTelemetry documentation",
+              "url": "https://opentelemetry.io/docs/"
+            },
+            {
+              "title": "Site Reliability Engineering",
+              "url": "https://sre.google/sre-book/table-of-contents/"
+            },
+            {
+              "title": "Building GitHub Apps",
+              "url": "https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps"
+            }
+          ],
+          "codeExamples": []
+        },
+        {
+          "id": "x05",
+          "title": "Technical defense and the next development cycle",
+          "hours": 48,
+          "lessons": [
+            "Defend the capstone as an engineer: explain the user problem, one important invariant, one architecture tradeoff, one production-style failure and the evidence behind a performance claim. Reproduce a build and a test from a clean environment. Show which decisions are reversible and which create migration costs.",
+            "Complete an independent algorithm assessment, a code-review exercise and a debugging task on unfamiliar code. Use the results to identify the next learning cycle. If a prerequisite remains weak, revisit it with a new project context rather than treating a completed progress bar as proof of mastery.",
+            "Publish an honest project narrative and continue maintenance. Seek reviews, real contributions and progressively larger responsibilities. Mathematical strength is a powerful advantage in reasoning, while engineering judgment grows through feedback from users, teammates and operated systems. Treat this 2,000-hour path as a foundation for that continuing practice."
+          ],
+          "task": "Give a technical defense, reproduce the project from scratch and create a next-quarter plan supported by assessment evidence.",
+          "successCriteria": [
+            "Explain decisions without relying on memorized text",
+            "Reproduce build, tests and one recovery procedure",
+            "Choose next steps from observed skill gaps"
+          ],
+          "project": "Capstone release and engineering portfolio",
+          "resources": [
+            {
+              "title": "Pull request guide",
+              "url": "https://docs.github.com/en/pull-requests/get-started"
+            },
+            {
+              "title": "Design and Analysis of Algorithms, 6.046J",
+              "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/"
+            },
+            {
+              "title": "Site Reliability Engineering",
+              "url": "https://sre.google/sre-book/table-of-contents/"
+            }
+          ],
+          "codeExamples": []
+        }
+      ]
+    }
+  ],
+  "problems": [
+    {
+      "id": "cf-4a",
+      "title": "Watermelon",
+      "url": "https://codeforces.com/problemset/problem/4/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Parity and boundary cases",
+      "phaseId": "python",
+      "practiceNote": "Start by checking the smallest allowed inputs; write your own reasoning before coding."
+    },
+    {
+      "id": "cf-71a",
+      "title": "Way Too Long Words",
+      "url": "https://codeforces.com/problemset/problem/71/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Strings and input/output",
+      "phaseId": "python",
+      "practiceNote": "Practice exact input/output and compare a short and a long input."
+    },
+    {
+      "id": "cf-231a",
+      "title": "Team",
+      "url": "https://codeforces.com/problemset/problem/231/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Counting and conditions",
+      "phaseId": "python",
+      "practiceNote": "Express the decision for one record as a function, then aggregate records."
+    },
+    {
+      "id": "cf-282a",
+      "title": "Bit++",
+      "url": "https://codeforces.com/problemset/problem/282/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "State updates",
+      "phaseId": "python",
+      "practiceNote": "Trace the state after each operation before writing the loop."
+    },
+    {
+      "id": "cf-158a",
+      "title": "Next Round",
+      "url": "https://codeforces.com/problemset/problem/158/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Conditions and indexing",
+      "phaseId": "python",
+      "practiceNote": "Check boundary values and the difference between a position and an array index."
+    },
+    {
+      "id": "cf-1a",
+      "title": "Theatre Square",
+      "url": "https://codeforces.com/problemset/problem/1/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Integer arithmetic",
+      "phaseId": "python",
+      "practiceNote": "Use exact integer reasoning and check values immediately around a divisibility boundary."
+    },
+    {
+      "id": "cf-339a",
+      "title": "Helpful Maths",
+      "url": "https://codeforces.com/problemset/problem/339/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Parsing and sorting",
+      "phaseId": "dsa",
+      "practiceNote": "Separate parsing, transformation and formatting in your implementation."
+    },
+    {
+      "id": "cf-236a",
+      "title": "Boy or Girl",
+      "url": "https://codeforces.com/problemset/problem/236/A",
+      "platform": "Codeforces",
+      "difficulty": "Foundation",
+      "topic": "Sets and distinct values",
+      "phaseId": "dsa",
+      "practiceNote": "Explain why the representation needs membership rather than frequency."
+    },
+    {
+      "id": "cf-160a",
+      "title": "Twins",
+      "url": "https://codeforces.com/problemset/problem/160/A",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Sorting and greedy reasoning",
+      "phaseId": "dsa",
+      "practiceNote": "Before coding, write an exchange argument for the order of choices."
+    },
+    {
+      "id": "cf-337a",
+      "title": "Puzzles",
+      "url": "https://codeforces.com/problemset/problem/337/A",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Sorting and windows",
+      "phaseId": "dsa",
+      "practiceNote": "Compare a sorted representation with a brute-force search on a tiny case."
+    },
+    {
+      "id": "cf-363b",
+      "title": "Fence",
+      "url": "https://codeforces.com/problemset/problem/363/B",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Prefix sums and windows",
+      "phaseId": "dsa",
+      "practiceNote": "State your interval convention and test the first and last valid windows."
+    },
+    {
+      "id": "cf-279b",
+      "title": "Books",
+      "url": "https://codeforces.com/problemset/problem/279/B",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Two pointers",
+      "phaseId": "dsa",
+      "practiceNote": "Prove which input property permits a window boundary to move only forward."
+    },
+    {
+      "id": "cf-706b",
+      "title": "Interesting drink",
+      "url": "https://codeforces.com/problemset/problem/706/B",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Binary search",
+      "phaseId": "dsa",
+      "practiceNote": "Write the boundary predicate before selecting a binary-search template."
+    },
+    {
+      "id": "cf-474b",
+      "title": "Worms",
+      "url": "https://codeforces.com/problemset/problem/474/B",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Prefix sums and binary search",
+      "phaseId": "dsa",
+      "practiceNote": "Check values exactly on a cumulative boundary and immediately after it."
+    },
+    {
+      "id": "cf-455a",
+      "title": "Boredom",
+      "url": "https://codeforces.com/problemset/problem/455/A",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Dynamic programming",
+      "phaseId": "graphs",
+      "practiceNote": "Define the DP state in a sentence and verify a small brute-force oracle."
+    },
+    {
+      "id": "cf-580c",
+      "title": "Kefa and Park",
+      "url": "https://codeforces.com/problemset/problem/580/C",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "Trees and traversal state",
+      "phaseId": "graphs",
+      "practiceNote": "Identify what information must travel with each traversal state."
+    },
+    {
+      "id": "cf-520b",
+      "title": "Two Buttons",
+      "url": "https://codeforces.com/problemset/problem/520/B",
+      "platform": "Codeforces",
+      "difficulty": "Developing",
+      "topic": "State graphs and shortest paths",
+      "phaseId": "graphs",
+      "practiceNote": "Model operations as graph edges and justify the explored state bounds."
+    },
+    {
+      "id": "cf-20c",
+      "title": "Dijkstra?",
+      "url": "https://codeforces.com/problemset/problem/20/C",
+      "platform": "Codeforces",
+      "difficulty": "Advanced",
+      "topic": "Shortest paths",
+      "phaseId": "graphs",
+      "practiceNote": "Return a witness path and handle the unreachable case explicitly."
+    },
+    {
+      "id": "cf-706c",
+      "title": "Hard problem",
+      "url": "https://codeforces.com/problemset/problem/706/C",
+      "platform": "Codeforces",
+      "difficulty": "Advanced",
+      "topic": "Dynamic programming on sequences",
+      "phaseId": "graphs",
+      "practiceNote": "State which past information affects the next decision and which does not."
+    },
+    {
+      "id": "cf-339d",
+      "title": "Xenia and Bit Operations",
+      "url": "https://codeforces.com/problemset/problem/339/D",
+      "platform": "Codeforces",
+      "difficulty": "Advanced",
+      "topic": "Segment trees",
+      "phaseId": "competitive",
+      "practiceNote": "Write a naive update oracle and compare random operation sequences."
+    },
+    {
+      "id": "cf-86d",
+      "title": "Powerful array",
+      "url": "https://codeforces.com/problemset/problem/86/D",
+      "platform": "Codeforces",
+      "difficulty": "Advanced",
+      "topic": "Offline range queries",
+      "phaseId": "competitive",
+      "practiceNote": "Derive how adding or removing one value changes the maintained statistic."
+    },
+    {
+      "id": "cf-242e",
+      "title": "XOR on Segment",
+      "url": "https://codeforces.com/problemset/problem/242/E",
+      "platform": "Codeforces",
+      "difficulty": "Advanced",
+      "topic": "Lazy propagation and bits",
+      "phaseId": "competitive",
+      "practiceNote": "Specify both the stored summary and the composition of updates before implementation."
+    },
+    {
+      "id": "cf-342e",
+      "title": "Xenia and Tree",
+      "url": "https://codeforces.com/problemset/problem/342/E",
+      "platform": "Codeforces",
+      "difficulty": "Expert",
+      "topic": "Tree queries and decomposition",
+      "phaseId": "competitive",
+      "practiceNote": "Compare your optimized structure against exhaustive distance queries on small trees."
+    },
+    {
+      "id": "cf-295b",
+      "title": "Greg and Graph",
+      "url": "https://codeforces.com/problemset/problem/295/B",
+      "platform": "Codeforces",
+      "difficulty": "Advanced",
+      "topic": "All-pairs paths and offline processing",
+      "phaseId": "competitive",
+      "practiceNote": "Ask whether changing the direction of processing simplifies the update operation."
+    },
+    {
+      "id": "cf-446c",
+      "title": "DZY Loves Fibonacci Numbers",
+      "url": "https://codeforces.com/problemset/problem/446/C",
+      "platform": "Codeforces",
+      "difficulty": "Expert",
+      "topic": "Range updates and recurrence structure",
+      "phaseId": "competitive",
+      "practiceNote": "Build and test the algebra of the update before combining it with a tree."
+    },
+    {
+      "id": "cses-1192",
+      "title": "Counting Rooms",
+      "url": "https://cses.fi/problemset/task/1192/",
+      "platform": "CSES",
+      "difficulty": "Developing",
+      "topic": "Grid traversal",
+      "phaseId": "graphs",
+      "practiceNote": "Build a small hand-drawn example with disconnected regions before coding."
+    },
+    {
+      "id": "cses-1671",
+      "title": "Shortest Routes I",
+      "url": "https://cses.fi/problemset/task/1671/",
+      "platform": "CSES",
+      "difficulty": "Developing",
+      "topic": "Weighted shortest paths",
+      "phaseId": "graphs",
+      "practiceNote": "Record the nonnegative-weight assumption and a safe distance representation."
+    },
+    {
+      "id": "cses-1158",
+      "title": "Book Shop",
+      "url": "https://cses.fi/problemset/task/1158/",
+      "platform": "CSES",
+      "difficulty": "Developing",
+      "topic": "Knapsack DP",
+      "phaseId": "graphs",
+      "practiceNote": "Explain why the order of updates matters when compressing the table."
+    },
+    {
+      "id": "cses-1648",
+      "title": "Dynamic Range Sum Queries",
+      "url": "https://cses.fi/problemset/task/1648/",
+      "platform": "CSES",
+      "difficulty": "Advanced",
+      "topic": "Fenwick or segment tree",
+      "phaseId": "competitive",
+      "practiceNote": "Compare all queries with a direct array model during development."
+    },
+    {
+      "id": "lc-4",
+      "title": "Median of Two Sorted Arrays",
+      "url": "https://leetcode.com/problems/median-of-two-sorted-arrays/",
+      "platform": "LeetCode",
+      "difficulty": "Advanced",
+      "topic": "Binary search and partitioning",
+      "phaseId": "competitive",
+      "practiceNote": "First create a simple oracle; then prove the optimized partition conditions."
+    },
+    {
+      "id": "lc-23",
+      "title": "Merge k Sorted Lists",
+      "url": "https://leetcode.com/problems/merge-k-sorted-lists/",
+      "platform": "LeetCode",
+      "difficulty": "Advanced",
+      "topic": "Heaps and merging",
+      "phaseId": "competitive",
+      "practiceNote": "Explain the relationship between the next output item and your maintained frontier."
+    },
+    {
+      "id": "lc-42",
+      "title": "Trapping Rain Water",
+      "url": "https://leetcode.com/problems/trapping-rain-water/",
+      "platform": "LeetCode",
+      "difficulty": "Advanced",
+      "topic": "Two pointers and invariants",
+      "phaseId": "competitive",
+      "practiceNote": "Derive a per-position reference calculation before optimizing memory."
+    },
+    {
+      "id": "lc-84",
+      "title": "Largest Rectangle in Histogram",
+      "url": "https://leetcode.com/problems/largest-rectangle-in-histogram/",
+      "platform": "LeetCode",
+      "difficulty": "Advanced",
+      "topic": "Monotone stacks",
+      "phaseId": "competitive",
+      "practiceNote": "Explain exactly when an item can no longer remain on the stack."
+    },
+    {
+      "id": "atcoder-dpa",
+      "title": "Frog 1",
+      "url": "https://atcoder.jp/contests/dp/tasks/dp_a",
+      "platform": "AtCoder",
+      "difficulty": "Developing",
+      "topic": "Dynamic programming",
+      "phaseId": "graphs",
+      "practiceNote": "Specify base cases and verify each transition on a short sequence."
+    },
+    {
+      "id": "atcoder-dpd",
+      "title": "Knapsack 1",
+      "url": "https://atcoder.jp/contests/dp/tasks/dp_d",
+      "platform": "AtCoder",
+      "difficulty": "Developing",
+      "topic": "Knapsack DP",
+      "phaseId": "graphs",
+      "practiceNote": "State which dimension controls the memory requirement."
+    },
+    {
+      "id": "atcoder-dpg",
+      "title": "Longest Path",
+      "url": "https://atcoder.jp/contests/dp/tasks/dp_g",
+      "platform": "AtCoder",
+      "difficulty": "Advanced",
+      "topic": "DAG dynamic programming",
+      "phaseId": "graphs",
+      "practiceNote": "Prove that your evaluation order respects all dependencies."
+    }
+  ]
+}
