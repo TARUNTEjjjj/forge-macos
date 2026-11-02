@@ -6,7 +6,7 @@ mkdir -p .build/cache .build/config .build/security .build/ModuleCache
 export CLANG_MODULE_CACHE_PATH="$ROOT/.build/ModuleCache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$ROOT/.build/ModuleCache"
 if [ "$#" -eq 0 ]; then
-  printf 'Usage: %s build|test [options]\n' "$0" >&2
+  printf 'Usage: %s build|run|test [options]\n' "$0" >&2
   exit 2
 fi
 COMMAND="$1"
