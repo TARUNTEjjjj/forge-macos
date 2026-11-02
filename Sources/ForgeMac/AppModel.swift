@@ -93,7 +93,7 @@ final class AppModel: ObservableObject {
             let bytes = try store.exportData(progress)
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.json]
-            panel.nameFieldStringValue = "Forge-progress-\(Date().formatted(.iso8601.year().month().day().dateSeparator(.dash))).json"
+            panel.nameFieldStringValue = "Forge-progress-\(Date().formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day().dateSeparator(.dash))).json"
             panel.message = "Save your native Mac lessons, notes, focus, and study sessions. Online lab data is stored separately."
             if panel.runModal() == .OK, let url = panel.url {
                 try bytes.write(to: url, options: .atomic)
