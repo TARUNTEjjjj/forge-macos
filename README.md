@@ -1,6 +1,6 @@
 # Forge for Mac
 
-Private repository: https://github.com/TARUNTEjjjj/forge-macos
+Source repository: https://github.com/TARUNTEjjjj/forge-macos
 
 A native SwiftUI study workspace for the Forge coding curriculum. Read the complete
 50-module curriculum offline, plan a daily focus, keep lesson notes, record practice
@@ -72,9 +72,9 @@ See [privacy](docs/privacy.md) for the native and online data boundaries.
 
 Make one useful change at a time. Describe the behavior, add a regression check when
 it protects a real failure case, and explain the result in the commit. Keep source
-under the owner's **TARUNTEjjjj** account and private until the owner requests a
-visibility change. Never commit keys, profiles, certificates, user exports, or build
-products.
+under the owner's **TARUNTEjjjj** account. The repository is public; change its
+visibility only at the owner's request. Never commit keys, profiles, certificates,
+user exports, or build products.
 
 The learning plan is a practice budget, not a guarantee of job level, contest rating,
 or pay. Lesson resources and contest tasks remain attributed to their original sites.

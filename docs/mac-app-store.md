@@ -2,7 +2,7 @@
 
 Status: a native macOS source project and local app build; **not submitted or approved**.
 The current development environment has Command Line Tools, not full Xcode. Keep the
-live website and private source repository independent of any App Store submission.
+live website and source repository independent of any App Store submission.
 
 ## Product boundaries
 
