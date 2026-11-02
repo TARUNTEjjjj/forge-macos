@@ -88,7 +88,7 @@ final class LabWorkspace: NSObject, NSToolbarDelegate {
     }
     @objc private func activateItem(_ sender: NSToolbarItem) {
         switch sender.itemIdentifier.rawValue {
-        case "refresh": browser.webView.reload()
+        case "refresh": browser.reloadOrRetry()
         case "external": NSWorkspace.shared.open(LabBrowser.home)
         default: browser.open(sender.itemIdentifier.rawValue)
         }
@@ -102,6 +102,8 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
     @Published var loading = false
     @Published var error: String?
     private var downloads: [WKDownload] = []
+    private var destinations: [ObjectIdentifier: (temporary: URL, chosen: URL)] = [:]
+    private var lastRequest: URLRequest?
 
     override init() {
         let configuration = WKWebViewConfiguration()
@@ -117,14 +119,33 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
         error = nil
         var url = URLComponents(url: Self.home, resolvingAgainstBaseURL: false)!
         url.fragment = fragment
-        webView.load(URLRequest(url: url.url!))
+        let request = URLRequest(url: url.url!)
+        lastRequest = request
+        webView.load(request)
+    }
+
+    /// A first load that fails leaves no page for reload(), so load the last request again.
+    /// After a web content crash the page is still in the history, and reload() restores it.
+    func reloadOrRetry() {
+        if webView.backForwardList.currentItem == nil, let lastRequest { webView.load(lastRequest) } else { webView.reload() }
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { loading = true; error = nil }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { loading = false }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError failure: Error) { fail(failure) }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError failure: Error) { fail(failure) }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { loading = false; error = "The web content process stopped. Reload to continue." }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        loading = false
+        error = "The web content process stopped."
+        // A closed labs window loads a fresh page when it is shown again, so only alert while it is open.
+        guard let window = webView.window, window.isVisible || window.isMiniaturized else { return }
+        let alert = NSAlert()
+        alert.messageText = "Forge labs stopped"
+        alert.informativeText = "The lab page stopped unexpectedly, possibly because it ran out of memory. Work not yet saved in the lab may be lost. Choose Reload to continue, or use Reload in the labs toolbar later."
+        alert.addButton(withTitle: "Reload")
+        alert.addButton(withTitle: "Not now")
+        if alert.runModal() == .alertFirstButtonReturn { webView.reload() }
+    }
     private func fail(_ failure: Error) {
         if (failure as NSError).code == NSURLErrorCancelled { return }
         loading = false
@@ -159,11 +180,45 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
         let panel = NSSavePanel()
         panel.nameFieldStringValue = (suggestedFilename as NSString).lastPathComponent
         panel.message = "Save your Forge project or learning backup."
-        completionHandler(panel.runModal() == .OK ? panel.url : nil)
+        guard panel.runModal() == .OK, let chosen = panel.url else { completionHandler(nil); return }
+        // WebKit will not write over an existing file, and the chosen file must survive a failed
+        // download, so download into a fresh temporary folder and move the file in when it finishes.
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Forge-download-\(UUID().uuidString)", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        } catch let failure {
+            let alert = NSAlert(); alert.messageText = "Download could not be saved"; alert.informativeText = failure.localizedDescription; alert.runModal()
+            completionHandler(nil)
+            return
+        }
+        let temporary = folder.appendingPathComponent(chosen.lastPathComponent)
+        destinations[ObjectIdentifier(download)] = (temporary, chosen)
+        completionHandler(temporary)
     }
-    func downloadDidFinish(_ download: WKDownload) { downloads.removeAll { $0 === download } }
+    func downloadDidFinish(_ download: WKDownload) {
+        downloads.removeAll { $0 === download }
+        guard let destination = destinations.removeValue(forKey: ObjectIdentifier(download)) else { return }
+        defer { try? FileManager.default.removeItem(at: destination.temporary.deletingLastPathComponent()) }
+        do {
+            if FileManager.default.fileExists(atPath: destination.chosen.path) {
+                // replaceItemAt needs the new file on the destination's volume (an external drive, for example).
+                let staging = try FileManager.default.url(for: .itemReplacementDirectory, in: .userDomainMask, appropriateFor: destination.chosen, create: true)
+                defer { try? FileManager.default.removeItem(at: staging) }
+                let staged = staging.appendingPathComponent(destination.chosen.lastPathComponent)
+                try FileManager.default.moveItem(at: destination.temporary, to: staged)
+                _ = try FileManager.default.replaceItemAt(destination.chosen, withItemAt: staged)
+            } else {
+                try FileManager.default.moveItem(at: destination.temporary, to: destination.chosen)
+            }
+        } catch let failure {
+            let alert = NSAlert(); alert.messageText = "Download could not be saved"; alert.informativeText = failure.localizedDescription; alert.runModal()
+        }
+    }
     func download(_ download: WKDownload, didFailWithError failure: Error, resumeData: Data?) {
         downloads.removeAll { $0 === download }
+        if let destination = destinations.removeValue(forKey: ObjectIdentifier(download)) {
+            try? FileManager.default.removeItem(at: destination.temporary.deletingLastPathComponent())
+        }
         if (failure as NSError).code != NSURLErrorCancelled {
             let alert = NSAlert(); alert.messageText = "Download could not be saved"; alert.informativeText = failure.localizedDescription; alert.runModal()
         }
