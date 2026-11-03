@@ -1,0 +1,21 @@
+name: Forge Mac checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Core persistence and curriculum regression tests
+        run: scripts/test.sh
+      - name: Native draft and navigation regression tests
+        run: scripts/swift-command.sh run ForgeMac --check-native
+      - name: Build and verify local debug app
+        run: scripts/build-app.sh debug
