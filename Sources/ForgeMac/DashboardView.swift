@@ -116,6 +116,6 @@ private struct LearningWorld: View {
                 context.fill(tile, with: .color(color.opacity(index == completed / 5 ? 1 : 0.55)))
                 context.draw(Text(String(format:"%02d",index+1)).font(.system(size:9,weight:.bold,design:.monospaced)).foregroundColor(ForgeTheme.ink), at: CGPoint(x:point.x,y:point.y+39))
             }
-        }.accessibilityLabel("Ten chapters in the learning path. \(completed) modules reviewed.")
+        }.accessibilityLabel("Ten chapters in the learning path. \(completed) module\(completed == 1 ? "" : "s") reviewed.")
     }
 }

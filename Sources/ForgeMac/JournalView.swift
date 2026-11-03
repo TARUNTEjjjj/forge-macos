@@ -34,7 +34,7 @@ struct JournalView: View {
                                         .frame(height: max(3, Double(value) / Double(peak) * 95))
                                     Text(date.formatted(.dateTime.weekday(.abbreviated))).font(.caption)
                                 }.frame(maxWidth: .infinity).accessibilityElement(children: .ignore)
-                                    .accessibilityLabel("\(date.formatted(date: .abbreviated, time: .omitted)): \(value) minutes")
+                                    .accessibilityLabel("\(date.formatted(date: .abbreviated, time: .omitted)): \(value) minute\(value == 1 ? "" : "s")")
                             }
                         }.frame(height: 145, alignment: .bottom)
                     }
@@ -43,7 +43,7 @@ struct JournalView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Record a session").font(.title3.bold())
                         HStack(spacing: 20) {
-                            Stepper("\(model.sessionMinutesDraft) minutes", value: $model.sessionMinutesDraft, in: 1...720, step: 5).frame(width: 190)
+                            Stepper("\(model.sessionMinutesDraft) minute\(model.sessionMinutesDraft == 1 ? "" : "s")", value: $model.sessionMinutesDraft, in: 1...720, step: 5).frame(width: 190)
                             Picker("Lesson", selection: $model.sessionModuleIDDraft) {
                                 Text("Independent practice").tag("")
                                 ForEach(model.curriculum?.modules ?? []) { module in Text(module.title).tag(module.id) }
@@ -71,7 +71,7 @@ struct JournalView: View {
                     ForgeCard {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Label("\(session.minutes) minutes", systemImage: "clock").font(.headline)
+                                Label("\(session.minutes) minute\(session.minutes == 1 ? "" : "s")", systemImage: "clock").font(.headline)
                                 Spacer()
                                 Text(session.date.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(ForgeTheme.muted)
                                 Button { deleteSession = session.id } label: { Image(systemName: "trash") }.buttonStyle(.borderless).help("Remove this session").disabled(model.readOnly)
