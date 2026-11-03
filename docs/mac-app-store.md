@@ -70,3 +70,8 @@ guidelines. Do not hide the feature or claim the educational exception guarantee
 approval. All advertised functions must be working during review.
 
 [Current App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
+
+
+## 3 November 2026 pull-request review
+
+The debug app assembled and passed ad-hoc signature verification locally. All 16 core checks and all four native regression checks passed. A new read-only GitHub Actions workflow runs these checks and builds the debug app on macOS for pull requests and `main` pushes. This does not archive, upload, or publish an App Store release. The download-replacement path still needs a signed, sandboxed GUI save-panel test before distribution.

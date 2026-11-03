@@ -1,7 +1,7 @@
 # Forge Mac working conventions
 
 - Use only the owner's GitHub account `TARUNTEjjjj`. Check authentication before remote writes.
-- Keep this repository private unless the owner explicitly requests a visibility change.
+- The repository is public; change its visibility only at the owner's request.
 - Build meaningful functionality with accurate commit messages and tests for real failure cases. The owner chooses each day's focus; do not manufacture activity.
 - Keep the native curriculum, notes, and journal available offline. Online labs use a separate WebKit window and separate website storage.
 - Run `scripts/test.sh` and `scripts/swift-command.sh run ForgeMac --check-native` for persistence/editor changes. Run `scripts/build-app.sh debug` for native changes.

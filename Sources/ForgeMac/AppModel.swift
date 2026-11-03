@@ -93,7 +93,7 @@ final class AppModel: ObservableObject {
             let bytes = try store.exportData(progress)
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.json]
-            panel.nameFieldStringValue = "Forge-progress-\(Date().formatted(.iso8601.year().month().day().dateSeparator(.dash))).json"
+            panel.nameFieldStringValue = "Forge-progress-\(Date().formatted(Date.ISO8601FormatStyle(timeZone: .current).year().month().day().dateSeparator(.dash))).json"
             panel.message = "Save your native Mac lessons, notes, focus, and study sessions. Online lab data is stored separately."
             if panel.runModal() == .OK, let url = panel.url {
                 try bytes.write(to: url, options: .atomic)
@@ -129,13 +129,14 @@ final class AppModel: ObservableObject {
     func confirmRestore() {
         guard let data = backupCandidate, let store else { return }
         defer { backupCandidate = nil }
+        let hadExisting = FileManager.default.fileExists(atPath: store.fileURL.path)
         do {
             progress = try store.recoverFromBackup(data)
             noteDrafts = progress.notes
             focusDraft = progress.dailyFocus
             sessionReflectionDraft = ""
             readOnly = false
-            message = "Backup restored. A recovery copy of your previous data was kept on this Mac."
+            message = hadExisting ? "Backup restored. A recovery copy of your previous data was kept on this Mac." : "Backup restored."
         } catch { message = "Restore failed. Your data was left untouched. \(error.localizedDescription)" }
     }
 

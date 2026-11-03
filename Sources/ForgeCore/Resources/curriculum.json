@@ -291,7 +291,7 @@
       "url": "https://www.afterquery.com/",
       "provider": "AfterQuery",
       "topic": "Careers",
-      "description": "Expert-data company; this may be the company intended by the name AfterQuails."
+      "description": "Expert-data company; verify current opportunities, eligibility and terms."
     },
     {
       "id": "git-install",
@@ -1810,7 +1810,7 @@
           "hours": 44,
           "lessons": [
             "A portfolio should make your contribution easy to assess. Choose a few projects with clear users, working instructions, tests, design tradeoffs and a history of improvements. Include an honest account of what you built, where you received help and which parts remain incomplete. Useful maintenance often says more than many abandoned repositories.",
-            "For expert-work platforms such as micro1, Mercor, Outlier and possibly the intended company AfterQuery, inspect current official opportunities and terms. Eligibility, available projects, rates and payment arrangements vary. Advertised high rates are not a promise of selection, continuous work or equivalent take-home income.",
+            "For expert-work platforms such as micro1, Mercor, Outlier and AfterQuery, inspect current official opportunities and terms. Eligibility, available projects, rates and payment arrangements vary. Advertised high rates are not a promise of selection, continuous work or equivalent take-home income.",
             "Practice explaining a recent bug, an algorithm proof and a design tradeoff without reading notes. Build evidence of communication, reliability and review skill alongside contest results. Senior engineering roles require demonstrated judgment and sustained responsibility in real systems; a course and 2,000 study hours cannot guarantee that title or a $100-per-hour role."
           ],
           "task": "Prepare a portfolio with three strong artifacts, a truthful skill-evidence table and mock interviews tailored to current official role requirements.",
