@@ -46,7 +46,7 @@ provide additional utility, but approval remains Apple's decision.
 | Local `.app` assembly and signature verification | Passed: `scripts/build-app.sh debug`, local ad-hoc signature |
 | Full Xcode target build and archive | Pending full Xcode |
 | Provisioned distribution signature | Pending owner team configuration |
-| Launch from a moved copy with original build folder unavailable | Required resource relocation check |
+| Launch from a moved copy with original build folder unavailable | Release resource/native checks passed, 2026-11-04; debug GUI lesson navigation passed |
 | Backup export/import with malformed-file handling | Core + 4 native regression checks passed; full dialog QA pending |
 | Online Python in WebKit | Starter example execution verified; sandbox iframe navigation repaired |
 | Git, project editing, export, and all twelve Python missions | Further release QA required |
@@ -75,3 +75,16 @@ approval. All advertised functions must be working during review.
 ## 3 November 2026 pull-request review
 
 The debug app assembled and passed ad-hoc signature verification locally. All 16 core checks and all four native regression checks passed. A new read-only GitHub Actions workflow runs these checks and builds the debug app on macOS for pull requests and `main` pushes. This does not archive, upload, or publish an App Store release. The download-replacement path still needs a signed, sandboxed GUI save-panel test before distribution.
+
+## 4 November 2026 native product review
+
+All 16 core and four native checks passed on macOS 27.2, Apple Silicon, with Swift
+6.4.2 Command Line Tools. Both debug and optimized release apps assembled and passed
+ad-hoc signature verification. The release copy ran its resource and native checks
+from a path containing spaces while the original `.build` folder was unavailable,
+loading all 50 modules. The relocated debug app also opened its dashboard and an
+offline lesson through the native UI, without changing learner data.
+
+The earlier release dSYM limitation did not recur. Full Xcode archiving, distribution
+signing, Intel/macOS 14 devices, VoiceOver, live lab downloads and save-panel testing
+remain unverified in this review. No App Store upload or publication was performed.
