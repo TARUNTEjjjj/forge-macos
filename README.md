@@ -24,8 +24,8 @@ open build/Forge.app
 
 `build-app.sh` builds for the current Mac's architecture and assembles a local,
 ad-hoc-signed app. It doesn't publish to the Mac App Store or create a distribution
-signature. Use `./scripts/build-app.sh release` for an optimized local build. The initial
-restricted environment could not finish the release dSYM step; debug assembly passed.
+signature. Use `./scripts/build-app.sh release` for an optimized local build. Both
+debug and release assembly passed the 4 November 2026 Apple Silicon review.
 Build caches and the generated app stay inside this checkout.
 
 ## Use full Xcode
