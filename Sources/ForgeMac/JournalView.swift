@@ -4,10 +4,17 @@ import ForgeCore
 struct JournalView: View {
     @EnvironmentObject var model: AppModel
     @ViewState<UUID?> private var deleteSession = nil
-    private var dates: [Date] { (-6...0).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: Date()) } }
+    private var dates: [Date] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return (-6...0).compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
+    }
     var body: some View {
+        let displayedDates = dates
+        let dailyMinutes = model.progress.minutes(on: displayedDates)
+        let peak = max(1, dailyMinutes.max() ?? 1)
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24) {
                 PageHeader(eyebrow: "Make the practice visible", title: "Your practice journal", subtitle: "Choose a focus. Do the work. Record the evidence. Time logged here is your own record, separate from online lab progress.")
                 ForgeCard {
                     VStack(alignment: .leading, spacing: 14) {
@@ -25,9 +32,8 @@ struct JournalView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Eyebrow(text: "The last seven days")
                         HStack(alignment: .bottom, spacing: 16) {
-                            ForEach(dates, id: \.self) { date in
-                                let value = model.progress.minutes(on: date)
-                                let peak = max(1, dates.map { model.progress.minutes(on: $0) }.max() ?? 1)
+                            ForEach(Array(displayedDates.enumerated()), id: \.element) { index, date in
+                                let value = dailyMinutes[index]
                                 VStack(spacing: 8) {
                                     Text("\(value)m").font(.system(size: 11, design: .monospaced)).foregroundStyle(ForgeTheme.muted)
                                     RoundedRectangle(cornerRadius: 6).fill(Calendar.current.isDateInToday(date) ? ForgeTheme.red : ForgeTheme.violet.opacity(0.55))

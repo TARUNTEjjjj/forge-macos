@@ -18,7 +18,10 @@ public enum ForgeCoreChecks {
         "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup",
         "testInvalidRecoveryDoesNotTouchExistingData",
         "testReadOnlyDestinationFailsWithoutReportingSuccess",
-        "testCalendarTotalsUseLearnersTimezone"
+        "testCalendarTotalsUseLearnersTimezone",
+        "testDailyTotalsPreserveOrderAndTimezone",
+        "testDailyTotalsHandleDaylightSavingTransitions",
+        "testDailyTotalsHandleMaximumSessionHistory"
 ]
 
     public static func run(_ name: String) throws {
@@ -42,6 +45,9 @@ public enum ForgeCoreChecks {
         case "testInvalidRecoveryDoesNotTouchExistingData": try cases.testInvalidRecoveryDoesNotTouchExistingData()
         case "testReadOnlyDestinationFailsWithoutReportingSuccess": try cases.testReadOnlyDestinationFailsWithoutReportingSuccess()
         case "testCalendarTotalsUseLearnersTimezone": try cases.testCalendarTotalsUseLearnersTimezone()
+        case "testDailyTotalsPreserveOrderAndTimezone": try cases.testDailyTotalsPreserveOrderAndTimezone()
+        case "testDailyTotalsHandleDaylightSavingTransitions": try cases.testDailyTotalsHandleDaylightSavingTransitions()
+        case "testDailyTotalsHandleMaximumSessionHistory": try cases.testDailyTotalsHandleMaximumSessionHistory()
         default: throw CheckFailure(description: "Unknown check: \(name)")
         }
     }
@@ -263,6 +269,56 @@ private final class CoreCases {
         try XCTAssertEqual(snapshot.minutes(on: beforeMidnight, calendar: calendar), 25)
         try XCTAssertEqual(snapshot.minutes(on: afterMidnight, calendar: calendar), 45)
         try XCTAssertEqual(snapshot.completedHours(in: try Curriculum.loadBundled()), 32)
+    }
+
+    func testDailyTotalsPreserveOrderAndTimezone() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Kolkata"))
+        let formatter = ISO8601DateFormatter()
+        let before = try XCTUnwrap(formatter.date(from: "2026-10-29T18:20:00Z"))
+        let after = try XCTUnwrap(formatter.date(from: "2026-10-29T18:40:00Z"))
+        let empty = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: after))
+        let snapshot = ProgressSnapshot(sessions: [
+            StudySession(date: before, minutes: 25, reflection: "Before midnight"),
+            StudySession(date: after, minutes: 45, reflection: "After midnight")
+        ])
+        try XCTAssertEqual(snapshot.minutes(on: [after, empty, before, after], calendar: calendar), [45, 0, 25, 45])
+        try XCTAssertEqual(snapshot.minutes(on: [], calendar: calendar), [])
+        try XCTAssertEqual(ProgressSnapshot().minutes(on: [before, after], calendar: calendar), [0, 0])
+    }
+
+    func testDailyTotalsHandleDaylightSavingTransitions() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        let formatter = ISO8601DateFormatter()
+        // Both 01:30 occurrences on the 25-hour autumn day belong to one bar;
+        // the 23-hour spring day also includes its final half-hour.
+        for (dates, expected) in [
+            (["2026-11-01T05:30:00Z", "2026-11-01T06:30:00Z", "2026-11-02T04:30:00Z", "2026-11-02T05:00:00Z"], [60, 40]),
+            (["2026-03-08T06:30:00Z", "2026-03-08T07:30:00Z", "2026-03-09T03:30:00Z", "2026-03-09T04:00:00Z"], [60, 40])
+        ] {
+            let instants = try dates.map { try XCTUnwrap(formatter.date(from: $0)) }
+            let snapshot = ProgressSnapshot(sessions: instants.enumerated().map { index, date in
+                StudySession(date: date, minutes: (index + 1) * 10, reflection: "Boundary")
+            })
+            try XCTAssertEqual(snapshot.minutes(on: [instants[0], instants[3]], calendar: calendar), expected)
+        }
+    }
+
+    func testDailyTotalsHandleMaximumSessionHistory() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let start = Date(timeIntervalSince1970: 1_793_275_200)
+        let days = try (0..<7).map { try XCTUnwrap(calendar.date(byAdding: .day, value: $0, to: start)) }
+        var expected = Array(repeating: 0, count: days.count)
+        let sessions = (0..<20_000).map { index in
+            expected[index % days.count] += 25
+            return StudySession(date: days[index % days.count], minutes: 25, reflection: "Practice")
+        }
+        let snapshot = ProgressSnapshot(sessions: sessions)
+        try store.validate(snapshot)
+        try XCTAssertEqual(snapshot.minutes(on: days, calendar: calendar), expected)
+        try XCTAssertEqual(snapshot.minutes(on: Array(days.reversed()), calendar: calendar), Array(expected.reversed()))
     }
 
     private func sampleSnapshot() -> ProgressSnapshot {

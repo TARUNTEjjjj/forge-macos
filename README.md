@@ -81,6 +81,14 @@ or pay. Lesson resources and contest tasks remain attributed to their original s
 
 ## Current validation
 
+On 5 November 2026, the debug and optimized release builds passed 19 core checks,
+4 native editor/navigation checks, and local app assembly/signature verification.
+The journal now aggregates its seven-day chart in one pass through session history
+and creates session rows lazily while scrolling. Regression checks cover a full
+20,000-session history, empty/repeated days, local midnight, and both daylight-saving
+transitions. These are local data/build checks; interactive scrolling, VoiceOver,
+and distribution signing still need release-device testing.
+
 On 30 October 2026, Apple Silicon with Swift 6.4 Command Line Tools passed
 16 core regression checks and 4 native editor/navigation checks. The debug app
 compiled, assembled, passed code-signature verification, and launched through

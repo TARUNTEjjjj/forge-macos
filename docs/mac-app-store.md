@@ -88,3 +88,23 @@ offline lesson through the native UI, without changing learner data.
 The earlier release dSYM limitation did not recur. Full Xcode archiving, distribution
 signing, Intel/macOS 14 devices, VoiceOver, live lab downloads and save-panel testing
 remain unverified in this review. No App Store upload or publication was performed.
+
+## 5 November 2026 journal performance review
+
+The seven-day chart previously traversed the entire session history 56 times per
+view evaluation: each of seven bars recalculated its value and all seven values
+for the shared peak. It now aggregates the requested calendar days in one pass,
+calculates the peak once, and uses a lazy journal stack so offscreen session cards
+are not eagerly constructed. Calendar boundaries, rather than fixed 24-hour
+intervals, preserve local-day totals across daylight-saving changes.
+
+All 19 core and four native checks passed, including the three new regressions
+for repeated/empty days and time zones, spring/autumn clock changes, and the
+20,000-session limit. Debug and optimized release apps assembled and passed
+ad-hoc signature verification; both packaged apps ran the curriculum and native
+checks successfully. No learner data was used by the checks.
+
+The Command Line Tools linker still warns about absent optional Developer framework
+search directories, but both configurations link and run. Full Xcode archives,
+provisioned signing, VoiceOver, GUI scrolling, Intel support, and save-panel tests
+were not performed in this pass. No App Store upload or publication was performed.

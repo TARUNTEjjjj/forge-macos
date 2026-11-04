@@ -18,4 +18,7 @@ final class ForgeCoreTests: XCTestCase {
     func testInvalidRecoveryDoesNotTouchExistingData() throws { try ForgeCoreChecks.run("testInvalidRecoveryDoesNotTouchExistingData") }
     func testReadOnlyDestinationFailsWithoutReportingSuccess() throws { try ForgeCoreChecks.run("testReadOnlyDestinationFailsWithoutReportingSuccess") }
     func testCalendarTotalsUseLearnersTimezone() throws { try ForgeCoreChecks.run("testCalendarTotalsUseLearnersTimezone") }
+    func testDailyTotalsPreserveOrderAndTimezone() throws { try ForgeCoreChecks.run("testDailyTotalsPreserveOrderAndTimezone") }
+    func testDailyTotalsHandleDaylightSavingTransitions() throws { try ForgeCoreChecks.run("testDailyTotalsHandleDaylightSavingTransitions") }
+    func testDailyTotalsHandleMaximumSessionHistory() throws { try ForgeCoreChecks.run("testDailyTotalsHandleMaximumSessionHistory") }
 }

@@ -41,6 +41,20 @@ public struct ProgressSnapshot: Codable, Equatable, Sendable {
             .reduce(0) { $0 + $1.minutes }
     }
 
+    /// Totals in the requested order, including repeated or empty days. A single
+    /// pass over history keeps multi-day charts independent of the number of bars.
+    /// Calendar day boundaries also handle time zones and daylight-saving changes.
+    public func minutes(on dates: [Date], calendar: Calendar = .current) -> [Int] {
+        let days = dates.map { calendar.startOfDay(for: $0) }
+        guard !days.isEmpty else { return [] }
+        var totals = Dictionary(uniqueKeysWithValues: Set(days).map { ($0, 0) })
+        for session in sessions {
+            let day = calendar.startOfDay(for: session.date)
+            if let total = totals[day] { totals[day] = total + session.minutes }
+        }
+        return days.map { totals[$0, default: 0] }
+    }
+
     public func completedHours(in curriculum: Curriculum) -> Int {
         curriculum.modules.filter { completedModuleIDs.contains($0.id) }
             .reduce(0) { $0 + $1.hours }
