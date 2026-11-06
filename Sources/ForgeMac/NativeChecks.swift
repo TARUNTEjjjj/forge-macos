@@ -50,6 +50,30 @@ enum NativeChecks {
         try require(!LabBrowser.permitsFrame(URL(string: "https://example.com/")!, isMainFrame: false), "Untrusted embedded navigation was allowed")
         try require(!LabBrowser.permitsFrame(URL(string: "javascript:alert(1)")!, isMainFrame: true), "Script navigation was allowed")
         print("PASS sandbox runner frame allowed with external navigation blocked")
-        print("4/4 native regression checks passed")
+
+        // Lessons can be reviewed in any order. The overview map must mark the
+        // chapters actually reviewed, and its current chapter must hold Up Next.
+        let mapURL = directory.appendingPathComponent("map/progress.json")
+        let learner = AppModel(progressURL: mapURL)
+        let chapters = catalog.phases, last = chapters.count - 1
+        func requireMap(_ model: AppModel, _ marked: [Int: ChapterStatus], _ situation: String) throws {
+            var expected = Array(repeating: ChapterStatus.upcoming, count: chapters.count)
+            for (index, status) in marked { expected[index] = status }
+            let upNext = model.nextModule.flatMap { next in chapters.firstIndex { $0.modules.contains { $0.id == next.id } } }
+            try require(model.chapterStatuses == expected, "\(situation): map drew \(model.chapterStatuses.map(\.rawValue))")
+            try require(model.chapterStatuses.firstIndex(of: .current) == upNext, "\(situation): current chapter is not the Up Next chapter")
+        }
+        try requireMap(learner, [0: .current], "Fresh start")
+        chapters[0].modules.forEach { learner.markComplete($0.id, completed: true) }
+        try requireMap(learner, [0: .complete, 1: .current], "Chapter 1 reviewed")
+        chapters[last].modules.forEach { learner.markComplete($0.id, completed: true) }
+        try requireMap(learner, [0: .complete, 1: .current, last: .complete], "Final chapter reviewed early")
+        try requireMap(AppModel(progressURL: mapURL), [0: .complete, 1: .current, last: .complete], "Final chapter after restart")
+        learner.markComplete(chapters[0].modules[0].id, completed: false)
+        try requireMap(learner, [0: .current, last: .complete], "First lesson reopened")
+        catalog.modules.forEach { learner.markComplete($0.id, completed: true) }
+        try require(learner.chapterStatuses == Array(repeating: .complete, count: chapters.count) && learner.nextModule == nil, "Finished path still shows a current chapter")
+        print("PASS overview map shows the chapters actually reviewed")
+        print("5/5 native regression checks passed")
     }
 }

@@ -28,7 +28,7 @@ struct DashboardView: View {
                     ForgeCard {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack { Eyebrow(text: "Your learning world"); Spacer(); Text("10 CHAPTERS").font(.system(size: 9, design: .monospaced)).foregroundStyle(ForgeTheme.violet) }
-                            LearningWorld(completed: model.progress.completedModuleIDs.count).frame(height: 230)
+                            LearningWorld(chapters: model.chapterStatuses, completed: model.progress.completedModuleIDs.count).frame(height: 230)
                             Text("From first principles to working software").font(.system(size: 17, weight: .semibold))
                             Text("Python · C++ · Git · algorithms · software engineering")
                                 .font(.system(size: 12)).foregroundStyle(ForgeTheme.muted)
@@ -92,6 +92,7 @@ private struct Metric: View {
 }
 
 private struct LearningWorld: View {
+    let chapters: [ChapterStatus]
     let completed: Int
     var body: some View {
         Canvas { context, size in
@@ -110,10 +111,11 @@ private struct LearningWorld: View {
                 var left = Path(); left.addLines([top[3],top[2],lower[2],lower[3]]); left.closeSubpath()
                 var right = Path(); right.addLines([top[2],top[1],lower[1],lower[2]]); right.closeSubpath()
                 var tile = Path(); tile.addLines(top); tile.closeSubpath()
-                let color = index <= completed / 5 ? ForgeTheme.red : ForgeTheme.violet
+                let status = chapters.indices.contains(index) ? chapters[index] : .upcoming
+                let color = status == .upcoming ? ForgeTheme.violet : ForgeTheme.red
                 context.fill(left, with: .color(color.opacity(0.2)))
                 context.fill(right, with: .color(color.opacity(0.4)))
-                context.fill(tile, with: .color(color.opacity(index == completed / 5 ? 1 : 0.55)))
+                context.fill(tile, with: .color(color.opacity(status == .current ? 1 : 0.55)))
                 context.draw(Text(String(format:"%02d",index+1)).font(.system(size:9,weight:.bold,design:.monospaced)).foregroundColor(ForgeTheme.ink), at: CGPoint(x:point.x,y:point.y+39))
             }
         }.accessibilityLabel("Ten chapters in the learning path. \(completed) module\(completed == 1 ? "" : "s") reviewed.")
