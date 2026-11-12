@@ -21,7 +21,8 @@ public enum ForgeCoreChecks {
         "testCalendarTotalsUseLearnersTimezone",
         "testDailyTotalsPreserveOrderAndTimezone",
         "testDailyTotalsHandleDaylightSavingTransitions",
-        "testDailyTotalsHandleMaximumSessionHistory"
+        "testDailyTotalsHandleMaximumSessionHistory",
+        "testSessionSearchCombinesTermsLessonsAndDateBounds"
 ]
 
     public static func run(_ name: String) throws {
@@ -48,6 +49,7 @@ public enum ForgeCoreChecks {
         case "testDailyTotalsPreserveOrderAndTimezone": try cases.testDailyTotalsPreserveOrderAndTimezone()
         case "testDailyTotalsHandleDaylightSavingTransitions": try cases.testDailyTotalsHandleDaylightSavingTransitions()
         case "testDailyTotalsHandleMaximumSessionHistory": try cases.testDailyTotalsHandleMaximumSessionHistory()
+        case "testSessionSearchCombinesTermsLessonsAndDateBounds": try cases.testSessionSearchCombinesTermsLessonsAndDateBounds()
         default: throw CheckFailure(description: "Unknown check: \(name)")
         }
     }
@@ -319,6 +321,22 @@ private final class CoreCases {
         try store.validate(snapshot)
         try XCTAssertEqual(snapshot.minutes(on: days, calendar: calendar), expected)
         try XCTAssertEqual(snapshot.minutes(on: Array(days.reversed()), calendar: calendar), Array(expected.reversed()))
+    }
+
+    func testSessionSearchCombinesTermsLessonsAndDateBounds() throws {
+        let start = Date(timeIntervalSince1970: 1_793_275_200)
+        let older = StudySession(date: start.addingTimeInterval(-1), minutes: 10, reflection: "Queue invariant", moduleID: "f01")
+        let current = StudySession(date: start, minutes: 20, reflection: "Queue invariant", moduleID: "f01")
+        let independent = StudySession(date: start.addingTimeInterval(60), minutes: 30, reflection: "Refined proof")
+        let next = StudySession(date: start.addingTimeInterval(86_400), minutes: 40, reflection: "Queue invariant", moduleID: "f01")
+        let snapshot = ProgressSnapshot(sessions: [current, older, next, independent])
+        try XCTAssertEqual(snapshot.filteredSessions(query: " QUEUE   graphs ", since: start, before: next.date, moduleTitles: ["f01": "Graphs and BFS"]), [current])
+        try XCTAssertEqual(snapshot.filteredSessions(moduleID: ""), [independent])
+        try XCTAssertEqual(snapshot.filteredSessions(query: "independent proof"), [independent])
+        try XCTAssertEqual(snapshot.filteredSessions(moduleID: "missing"), [])
+        try XCTAssertEqual(snapshot.filteredSessions().map(\.id), [next.id, independent.id, current.id, older.id])
+        try XCTAssertEqual(snapshot.sessions, [current, older, next, independent])
+        try XCTAssertEqual(snapshot.totalMinutes, 100)
     }
 
     private func sampleSnapshot() -> ProgressSnapshot {

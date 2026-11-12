@@ -21,4 +21,5 @@ final class ForgeCoreTests: XCTestCase {
     func testDailyTotalsPreserveOrderAndTimezone() throws { try ForgeCoreChecks.run("testDailyTotalsPreserveOrderAndTimezone") }
     func testDailyTotalsHandleDaylightSavingTransitions() throws { try ForgeCoreChecks.run("testDailyTotalsHandleDaylightSavingTransitions") }
     func testDailyTotalsHandleMaximumSessionHistory() throws { try ForgeCoreChecks.run("testDailyTotalsHandleMaximumSessionHistory") }
+    func testSessionSearchCombinesTermsLessonsAndDateBounds() throws { try ForgeCoreChecks.run("testSessionSearchCombinesTermsLessonsAndDateBounds") }
 }

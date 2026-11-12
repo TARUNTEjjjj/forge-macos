@@ -44,6 +44,10 @@ vector-generated icon. These are preparation for distribution, not Apple approva
 
 ## Where the data lives
 
+The practice journal can search reflections and lesson titles, filter by lesson
+or the last 7/30 local calendar days, and show matching session/minute totals.
+History loads 50 rows at a time; filtering does not change your saved data.
+
 The native curriculum is bundled with the app. Progress, lesson notes, daily focus,
 and study sessions use a local JSON file in the app's Application Support location.
 The app supports user-selected JSON backups. A failed or invalid load must be repaired
