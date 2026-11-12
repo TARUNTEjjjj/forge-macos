@@ -36,6 +36,24 @@ public struct ProgressSnapshot: Codable, Equatable, Sendable {
 
     public var totalMinutes: Int { sessions.reduce(0) { $0 + $1.minutes } }
 
+    /// Searches reflections and lesson titles while keeping date bounds half-open.
+    /// Filtering never changes the stored history or the totals shown elsewhere.
+    public func filteredSessions(query: String = "", moduleID: String? = nil,
+                                 since: Date? = nil, before: Date? = nil,
+                                 moduleTitles: [String: String] = [:]) -> [StudySession] {
+        let terms = query.split(whereSeparator: \.isWhitespace).map(String.init)
+        return sessions.filter { session in
+            if let moduleID, (session.moduleID ?? "") != moduleID { return false }
+            if let since, session.date < since { return false }
+            if let before, session.date >= before { return false }
+            let title = session.moduleID.flatMap { moduleTitles[$0] } ?? "Independent practice"
+            let text = session.reflection + " " + title
+            return terms.allSatisfy { text.localizedStandardContains($0) }
+        }.sorted {
+            $0.date == $1.date ? $0.id.uuidString < $1.id.uuidString : $0.date > $1.date
+        }
+    }
+
     public func minutes(on date: Date, calendar: Calendar = .current) -> Int {
         sessions.filter { calendar.isDate($0.date, inSameDayAs: date) }
             .reduce(0) { $0 + $1.minutes }
