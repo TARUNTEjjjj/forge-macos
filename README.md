@@ -9,6 +9,7 @@ crimson design follows the live [Forge website](https://forge-learning-academy.p
 
 This repository targets **macOS 14 or later**. It is a Mac app, not an iPhone build.
 The shared `ForgeCore` models can support a later iOS interface.
+The current app version is **0.2.0 (build 2)**.
 
 ## Run on your Mac
 
@@ -19,6 +20,7 @@ resource catalog for the command-line build wrapper.
 ```sh
 ./scripts/test.sh
 ./scripts/swift-command.sh run ForgeMac --check-native
+./scripts/swift-command.sh run ForgeMac --check-resource-refresh
 ./scripts/build-app.sh debug
 open build/Forge.app
 ```
@@ -28,6 +30,8 @@ ad-hoc-signed app. It doesn't publish to the Mac App Store or create a distribut
 signature. Use `./scripts/build-app.sh release` for an optimized local build. Both
 debug and release assembly passed the 4 November 2026 Apple Silicon review.
 Build caches and the generated app stay inside this checkout.
+The resource-refresh checks use temporary cache files, controlled clocks and
+fixture downloads to exercise periodic checks, offline restarts and recovery.
 
 ## Use full Xcode
 
@@ -49,12 +53,23 @@ The Library includes a searchable, category-filtered collection of relevant
 open-source projects alongside the original official learning references. It
 shows collection dates, verified star counts where available and source licenses.
 On launch, the app checks the latest public catalog from this repository's `main`
-branch on GitHub. The **Refresh resources** button repeats that check. The library
-labels downloaded and bundled snapshots separately and flags metadata older than
-24 hours. A failed refresh retains the current snapshot; the bundled edition is
-available offline from startup. No token, progress, notes, cookies or account
-credentials are sent. The fixed HTTPS download rejects redirects, uses request
-and total-resource timeouts, and stops at 2 MB before validating the catalog.
+branch on GitHub. It checks again every 15 minutes while running, measured from
+the previous request's completion. Returning to the app or waking the Mac also
+checks when that interval is due. **Refresh resources** requests an immediate
+check; only one request can run at a time.
+
+Validated downloads are saved separately from learning progress so the collection
+remains available after an offline restart. The bundled edition remains the
+fallback when no saved copy can be used. An older downloaded catalog does not
+replace a newer displayed or saved collection. A failed refresh keeps the current
+snapshot. The Library identifies downloaded, saved and bundled editions and
+distinguishes the app's last successful check from the source's collection date. Metadata
+older than 24 hours is still marked stale; downloading it again does not make the
+underlying observations newer. GitHub's source collection normally updates daily.
+
+No token, progress, notes, search text, cookies or account credentials are sent.
+The fixed HTTPS download rejects redirects, uses request and total-resource
+timeouts, and stops at 2 MB before validating the catalog.
 
 The server-side resource refresh writes `resources/catalog.json`. Run
 `python3 scripts/sync-resource-catalog.py` after refreshing to update the native
@@ -71,6 +86,8 @@ The native curriculum is bundled with the app. Progress, lesson notes, daily foc
 and study sessions use a local JSON file in the app's Application Support location.
 The app supports user-selected JSON backups. A failed or invalid load must be repaired
 or restored before saving so the original data is preserved.
+The saved public resource catalog uses a separate file in Application Support.
+Learning backups do not include this replaceable catalog cache.
 
 The online labs open the existing Forge website in a dedicated WebKit window with
 a native toolbar, and require an internet connection.
@@ -103,6 +120,12 @@ or pay. Lesson resources and contest tasks remain attributed to their original s
 
 ## Current validation
 
+On 14 November 2026, 31 core checks, 4 native editor/navigation checks and
+10 resource-refresh integration checks passed. The new checks cover automatic
+timers, overlapping requests, cancellation and late responses, offline restarts,
+cache recovery and failed writes, newer saved data, and backward clock changes.
+The timer checks include a real elapsed-time refresh with a shortened test interval.
+
 On 5 November 2026, the debug and optimized release builds passed 19 core checks,
 4 native editor/navigation checks, and local app assembly/signature verification.
 The journal now aggregates its seven-day chart in one pass through session history
@@ -128,4 +151,4 @@ review are separate release checks. Record their actual results before publishin
 
 ## GitHub resource collection
 
-Explore the project-specific [resource catalog](resources/README.md): curated references, star-ranked discovery, dated source metadata, cached failure recovery and an optional read-only server API. The daily refresh workflow updates the public catalog. The native Library checks for that catalog on launch and falls back to its bundled edition; app-code updates require a new build.
+Explore the project-specific [resource catalog](resources/README.md): curated references, star-ranked discovery, dated source metadata, cached failure recovery and an optional read-only server API. The daily refresh workflow updates the public catalog. The native Library checks on launch and every 15 minutes while running, retains a validated copy for offline restarts, and keeps its bundled fallback. App-code updates require a new build.

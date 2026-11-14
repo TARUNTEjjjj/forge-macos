@@ -142,12 +142,24 @@ struct ResourceLibraryView: View {
                     } else if catalog.hasStaleMetadata {
                         Text("Some metadata is older than 24 hours or its last refresh was incomplete.").font(.caption).foregroundStyle(ForgeTheme.muted)
                     }
-                    Text("Explore relevant GitHub projects. Stars describe popularity; the source and license remain with each project. The app checks the latest public catalog on launch and keeps an offline fallback.")
+                    Text("Explore relevant GitHub projects. Stars describe popularity; the source and license remain with each project. Forge checks on launch and every 15 minutes while open, and checks after waking if an update is due. The latest valid collection is saved on this Mac for offline use.")
                         .font(.callout).foregroundStyle(ForgeTheme.muted)
                     HStack {
                         Button(model.isRefreshingResourceCatalog ? "Refreshing…" : "Refresh resources") { model.refreshResourceCatalog() }
                             .disabled(model.isRefreshingResourceCatalog)
                         if model.isRefreshingResourceCatalog { ProgressView().controlSize(.small) }
+                    }
+                    if model.resourceCatalogSavedOffline {
+                        Label("This collection is saved on this Mac for offline use.", systemImage: "arrow.down.circle")
+                            .font(.caption).foregroundStyle(ForgeTheme.mint)
+                    }
+                    if let checked = model.resourceCatalogLastCheckedAt {
+                        Text("Last successful check: " + checked.formatted(date: .abbreviated, time: .shortened))
+                            .font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
+                    if let next = model.resourceCatalogNextRefreshAt {
+                        Text("Next automatic check: " + next.formatted(date: .omitted, time: .shortened))
+                            .font(.caption).foregroundStyle(ForgeTheme.muted)
                     }
                     if let notice = model.resourceCatalogRefreshNotice {
                         Text(notice).font(.caption).foregroundStyle(ForgeTheme.muted)

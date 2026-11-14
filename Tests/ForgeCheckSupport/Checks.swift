@@ -8,6 +8,12 @@ public enum ForgeCoreChecks {
         "testRemoteGitHubCatalogDownloadsAndValidates",
         "testRemoteGitHubCatalogRejectsUnsafeResponses",
         "testGitHubCatalogAgeHonesty",
+        "testCatalogCacheSurvivesRestartWithoutTouchingProgress",
+        "testCatalogCacheRejectsAndRepairsDamagedFiles",
+        "testCatalogCacheInvalidSavePreservesLastGoodBytes",
+        "testCatalogCacheFailedWritePreservesLastGoodBytes",
+        "testCatalogCacheRejectsSymlinksAndDirectories",
+        "testCatalogCacheKeepsNewestCollection",
         "testBundledCurriculumHasCompleteLearningPath",
         "testNewStoreIsEmptyWithoutCreatingFile",
         "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip",
@@ -40,6 +46,12 @@ public enum ForgeCoreChecks {
         case "testRemoteGitHubCatalogDownloadsAndValidates": try cases.testRemoteGitHubCatalogDownloadsAndValidates()
         case "testRemoteGitHubCatalogRejectsUnsafeResponses": try cases.testRemoteGitHubCatalogRejectsUnsafeResponses()
         case "testGitHubCatalogAgeHonesty": try cases.testGitHubCatalogAgeHonesty()
+        case "testCatalogCacheSurvivesRestartWithoutTouchingProgress": try cases.testCatalogCacheSurvivesRestartWithoutTouchingProgress()
+        case "testCatalogCacheRejectsAndRepairsDamagedFiles": try cases.testCatalogCacheRejectsAndRepairsDamagedFiles()
+        case "testCatalogCacheInvalidSavePreservesLastGoodBytes": try cases.testCatalogCacheInvalidSavePreservesLastGoodBytes()
+        case "testCatalogCacheFailedWritePreservesLastGoodBytes": try cases.testCatalogCacheFailedWritePreservesLastGoodBytes()
+        case "testCatalogCacheRejectsSymlinksAndDirectories": try cases.testCatalogCacheRejectsSymlinksAndDirectories()
+        case "testCatalogCacheKeepsNewestCollection": try cases.testCatalogCacheKeepsNewestCollection()
         case "testBundledCurriculumHasCompleteLearningPath": try cases.testBundledCurriculumHasCompleteLearningPath()
         case "testNewStoreIsEmptyWithoutCreatingFile": try cases.testNewStoreIsEmptyWithoutCreatingFile()
         case "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip": try cases.testProgressSurvivesNewStoreInstanceAndBackupRoundTrip()
@@ -162,6 +174,122 @@ private final class CoreCases {
         let old = try XCTUnwrap(formatter.date(from: "2026-11-16T00:00:00Z"))
         try XCTAssertFalse(resource.isStale(at: fresh))
         try XCTAssertTrue(resource.isStale(at: old))
+    }
+
+    func testCatalogCacheSurvivesRestartWithoutTouchingProgress() throws {
+        let cache = ResourceCatalogFileStore(fileURL: directory.appendingPathComponent("catalog/latest.json"))
+        try XCTAssertTrue(try cache.load() == nil)
+        try XCTAssertFalse(FileManager.default.fileExists(atPath: cache.fileURL.path))
+        try store.save(sampleSnapshot())
+        let progressBefore = try Data(contentsOf: store.fileURL)
+        let original = try ResourceCatalog.decode(catalogFixtureData())
+        try XCTAssertTrue(try cache.save(original))
+        let reopened = ResourceCatalogFileStore(fileURL: cache.fileURL)
+        let restored = try XCTUnwrap(reopened.load())
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        try XCTAssertEqual(try encoder.encode(restored), encoder.encode(original))
+        try XCTAssertEqual(restored.fetchedAt, "2026-11-14T00:00:00.000Z")
+        try XCTAssertEqual(restored.matching("python").count, 1)
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), progressBefore)
+    }
+
+    func testCatalogCacheRejectsAndRepairsDamagedFiles() throws {
+        let cache = ResourceCatalogFileStore(fileURL: directory.appendingPathComponent("catalog.json"))
+        let valid = try ResourceCatalog.decode(catalogFixtureData())
+        for damaged in [Data("{truncated".utf8), Data(repeating: 32, count: ResourceCatalog.maximumDownloadBytes + 1)] {
+            try damaged.write(to: cache.fileURL)
+            try XCTAssertThrowsError(try cache.load())
+            try XCTAssertEqual(try Data(contentsOf: cache.fileURL), damaged)
+            try XCTAssertTrue(try cache.save(valid))
+            try XCTAssertEqual(try cache.load()?.fetchedAt, valid.fetchedAt)
+        }
+    }
+
+    func testCatalogCacheInvalidSavePreservesLastGoodBytes() throws {
+        let cache = ResourceCatalogFileStore(fileURL: directory.appendingPathComponent("catalog.json"))
+        try cache.save(ResourceCatalog.decode(catalogFixtureData()))
+        let previous = try Data(contentsOf: cache.fileURL)
+        var document = try JSONSerialization.jsonObject(with: catalogFixtureData()) as! [String: Any]
+        let originalItems = document["items"] as! [[String: Any]]
+        var unsafeItems = originalItems
+        unsafeItems[0]["url"] = "https://example.com/python/cpython"
+        document["items"] = unsafeItems
+        // Direct Codable decoding can construct unchecked values; save must still validate.
+        let unsafe = try JSONDecoder().decode(ResourceCatalog.self, from: JSONSerialization.data(withJSONObject: document))
+        try XCTAssertThrowsError(try cache.save(unsafe))
+        try XCTAssertEqual(try Data(contentsOf: cache.fileURL), previous)
+        document["items"] = originalItems
+        document["title"] = String(repeating: "x", count: ResourceCatalog.maximumDownloadBytes + 1)
+        let oversized = try JSONDecoder().decode(ResourceCatalog.self, from: JSONSerialization.data(withJSONObject: document))
+        try XCTAssertThrowsError(try cache.save(oversized))
+        try XCTAssertEqual(try Data(contentsOf: cache.fileURL), previous)
+        document["title"] = "Resources"
+        document["fetchedAt"] = "not-a-date"
+        let badDate = try JSONDecoder().decode(ResourceCatalog.self, from: JSONSerialization.data(withJSONObject: document))
+        try XCTAssertThrowsError(try cache.save(badDate))
+        try XCTAssertEqual(try Data(contentsOf: cache.fileURL), previous)
+    }
+
+    func testCatalogCacheFailedWritePreservesLastGoodBytes() throws {
+        let folder = directory.appendingPathComponent("read-only-cache")
+        let cache = ResourceCatalogFileStore(fileURL: folder.appendingPathComponent("catalog.json"))
+        try cache.save(ResourceCatalog.decode(catalogFixtureData()))
+        let previous = try Data(contentsOf: cache.fileURL)
+        let newer = try ResourceCatalog.decode(catalogFixtureData(fetchedAt: "2026-11-15T00:00:00Z"))
+        try FileManager.default.setAttributes([.posixPermissions: 0o400], ofItemAtPath: cache.fileURL.path)
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: folder.path)
+        defer {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: folder.path)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: cache.fileURL.path)
+        }
+        try XCTAssertThrowsError(try cache.save(newer))
+        try XCTAssertEqual(try Data(contentsOf: cache.fileURL), previous)
+        try XCTAssertEqual(try cache.load()?.fetchedAt, "2026-11-14T00:00:00.000Z")
+        // A file used as a parent is a deterministic second I/O failure case.
+        let impossible = ResourceCatalogFileStore(fileURL: cache.fileURL.appendingPathComponent("nested.json"))
+        try XCTAssertThrowsError(try impossible.save(newer))
+        try XCTAssertEqual(try Data(contentsOf: cache.fileURL), previous)
+    }
+
+    func testCatalogCacheRejectsSymlinksAndDirectories() throws {
+        let target = directory.appendingPathComponent("original.json")
+        let original = try catalogFixtureData()
+        try original.write(to: target)
+        let link = directory.appendingPathComponent("catalog.json")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+        let cache = ResourceCatalogFileStore(fileURL: link)
+        let valid = try ResourceCatalog.decode(original)
+        try XCTAssertThrowsError(try cache.load())
+        try XCTAssertThrowsError(try cache.save(valid))
+        try XCTAssertEqual(try Data(contentsOf: target), original)
+        try XCTAssertEqual(try FileManager.default.destinationOfSymbolicLink(atPath: link.path), target.path)
+        try FileManager.default.removeItem(at: target)
+        try XCTAssertThrowsError(try cache.load())
+        try XCTAssertThrowsError(try cache.save(valid))
+        let folderCache = ResourceCatalogFileStore(fileURL: directory)
+        try XCTAssertThrowsError(try folderCache.load())
+        try XCTAssertThrowsError(try folderCache.save(valid))
+    }
+
+    func testCatalogCacheKeepsNewestCollection() throws {
+        let cache = ResourceCatalogFileStore(fileURL: directory.appendingPathComponent("catalog.json"))
+        let undated = try ResourceCatalog.decode(catalogFixtureData(fetchedAt: nil))
+        let older = try ResourceCatalog.decode(catalogFixtureData(fetchedAt: "2026-11-13T00:00:00Z"))
+        let newest = try ResourceCatalog.decode(catalogFixtureData())
+        let equal = try ResourceCatalog.decode(catalogFixtureData(fetchedAt: "2026-11-14T05:30:00+05:30"))
+        try XCTAssertTrue(undated.isOlder(than: newest))
+        try XCTAssertFalse(newest.isOlder(than: undated))
+        try XCTAssertFalse(equal.isOlder(than: newest))
+        try XCTAssertFalse(newest.isOlder(than: equal))
+        try XCTAssertTrue(try cache.save(undated))
+        try XCTAssertTrue(try cache.save(newest))
+        let previous = try Data(contentsOf: cache.fileURL)
+        try XCTAssertFalse(try cache.save(older))
+        try XCTAssertFalse(try cache.save(undated))
+        try XCTAssertEqual(try Data(contentsOf: cache.fileURL), previous)
+        try XCTAssertTrue(try cache.save(equal))
+        try XCTAssertEqual(try cache.load()?.collectionDate, newest.collectionDate)
     }
 
     func setUpWithError() throws {
@@ -416,9 +544,10 @@ private final class CoreCases {
     }
 }
 
-private func catalogFixtureData() throws -> Data {
-    let item: [String: Any] = ["fullName": "python/cpython", "url": "https://github.com/python/cpython", "description": "Python language", "topics": ["python"], "stars": 100, "license": NSNull(), "category": "languages", "fetchedAt": "2026-11-14T00:00:00.000Z", "stale": false]
-    let document: [String: Any] = ["schemaVersion": 1, "project": "forge-macos", "title": "Resources", "fetchedAt": "2026-11-14T00:00:00.000Z", "status": "live", "categories": [["id": "languages", "title": "Languages"]], "items": [item]]
+private func catalogFixtureData(fetchedAt: String? = "2026-11-14T00:00:00.000Z") throws -> Data {
+    let timestamp: Any = fetchedAt as Any? ?? NSNull()
+    let item: [String: Any] = ["fullName": "python/cpython", "url": "https://github.com/python/cpython", "description": "Python language", "topics": ["python"], "stars": 100, "license": NSNull(), "category": "languages", "fetchedAt": timestamp, "stale": false]
+    let document: [String: Any] = ["schemaVersion": 1, "project": "forge-macos", "title": "Resources", "fetchedAt": timestamp, "status": "live", "categories": [["id": "languages", "title": "Languages"]], "items": [item]]
     return try JSONSerialization.data(withJSONObject: document)
 }
 
