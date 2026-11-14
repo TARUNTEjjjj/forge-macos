@@ -135,10 +135,23 @@ struct ResourceLibraryView: View {
                 TextField("Search resources and problems", text: $query).textFieldStyle(.roundedBorder)
                 if let catalog = model.resourceCatalog {
                     Text("Open-source discovery").font(.title2.bold())
-                    Text(catalog.status == "seed" ? "Curated starting points. Live popularity has not been checked." : "Bundled snapshot · " + (catalog.fetchedAt ?? "date unavailable") + " · " + catalog.status)
+                    Text(model.resourceCatalogOrigin + " · collected " + (catalog.fetchedAt ?? "date unavailable"))
                         .font(.caption).foregroundStyle(ForgeTheme.muted)
-                    Text("Explore relevant GitHub projects. Stars describe popularity; the source and license remain with each project. Updates arrive with new app builds.")
+                    if catalog.status == "seed" {
+                        Text("Curated starting points. Live popularity has not been checked.").font(.caption).foregroundStyle(ForgeTheme.muted)
+                    } else if catalog.hasStaleMetadata {
+                        Text("Some metadata is older than 24 hours or its last refresh was incomplete.").font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
+                    Text("Explore relevant GitHub projects. Stars describe popularity; the source and license remain with each project. The app checks the latest public catalog on launch and keeps an offline fallback.")
                         .font(.callout).foregroundStyle(ForgeTheme.muted)
+                    HStack {
+                        Button(model.isRefreshingResourceCatalog ? "Refreshing…" : "Refresh resources") { model.refreshResourceCatalog() }
+                            .disabled(model.isRefreshingResourceCatalog)
+                        if model.isRefreshingResourceCatalog { ProgressView().controlSize(.small) }
+                    }
+                    if let notice = model.resourceCatalogRefreshNotice {
+                        Text(notice).font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
                     Picker("Resource category", selection: $catalogCategory) {
                         Text("All categories").tag("")
                         ForEach(catalog.categories) { category in Text(category.title).tag(category.id) }
@@ -154,7 +167,7 @@ struct ResourceLibraryView: View {
                                     Text(resource.description).font(.system(size: 12)).foregroundStyle(ForgeTheme.muted).lineLimit(4)
                                     Text((resource.stars.map { "\($0.formatted()) stars" } ?? "Stars unverified") + " · " + (resource.license ?? "License unreported"))
                                         .font(.caption).foregroundStyle(ForgeTheme.muted)
-                                    if resource.stale { Text("Previous snapshot · check the source for current details").font(.caption).foregroundStyle(ForgeTheme.muted) }
+                                    if resource.isStale() { Text("Previous snapshot · check the source for current details").font(.caption).foregroundStyle(ForgeTheme.muted) }
                                     Button("Open on GitHub ↗") { model.openExternal(resource.url) }.buttonStyle(.link)
                                 }.frame(minHeight: 160, alignment: .top)
                             }
@@ -189,6 +202,9 @@ struct ResourceLibraryView: View {
                     }
                 }
             }.padding(32).frame(maxWidth: 1200)
+        }
+        .onChange(of: model.resourceCatalog?.categories.map(\.id) ?? []) { _, categories in
+            if !catalogCategory.isEmpty && !categories.contains(catalogCategory) { catalogCategory = "" }
         }
     }
 }

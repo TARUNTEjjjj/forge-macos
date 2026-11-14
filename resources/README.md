@@ -1,6 +1,6 @@
 # Forge native learning library
 
-The Library view reads `Sources/ForgeCore/Resources/resource-catalog.json`. `python3 scripts/sync-resource-catalog.py` copies the current public snapshot into the native bundle; local Swift builds run this step. An installed app retains its bundled edition until rebuilt. Learning progress stays separate.
+The Library view reads `Sources/ForgeCore/Resources/resource-catalog.json`. `python3 scripts/sync-resource-catalog.py` copies the current public snapshot into the native bundle; local Swift builds run this step. On launch, the updated app checks the fixed public GitHub catalog URL and retains the bundled snapshot when the network or remote validation fails. Learning progress stays separate.
 
 ## Use the collection
 
@@ -27,9 +27,9 @@ The refresh job uses rate-limit cooldowns and conditional requests when its loca
 
 ## Automated updates
 
-`.github/workflows/resources.yml` tests changes and, after it reaches the default branch, refreshes once daily or through **Run workflow**. A successful refresh commits only the public snapshot (and the native bundle copy in Forge for Mac). Failed refreshes stop before committing; branch protections can also prevent the bot push. The workflow has read-only permissions for tests and grants content-write permission only to the refresh job.
+`.github/workflows/resources.yml` tests changes and, after it reaches the default branch, refreshes once daily or through **Run workflow**. A usable validated refresh commits only the public snapshot (and the native bundle copy in Forge for Mac). Partial refreshes publish validated last-good entries with stale/error information and a workflow warning. Fatal refresh or validation errors stop before committing; branch protections can also prevent the bot push. The workflow has read-only permissions for tests and grants content-write permission only to the refresh job.
 
-A catalog update in GitHub does not by itself publish every hosted app: use that repository's existing deployment procedure. Static sites consume the checked-in snapshot during their build, while the optional API reads the on-disk snapshot. No GitHub credential goes into a browser build.
+The updated native app checks the public default-branch catalog on launch and falls back to its bundled edition. CDN caching can briefly delay a new snapshot. Application-code changes still require a new app build. The optional local API reads its on-disk snapshot; no GitHub credential goes into the app bundle.
 
 ## Source policy
 

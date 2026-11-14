@@ -47,9 +47,14 @@ vector-generated icon. These are preparation for distribution, not Apple approva
 
 The Library includes a searchable, category-filtered collection of relevant
 open-source projects alongside the original official learning references. It
-shows snapshot dates, verified star counts where available and source licenses.
-The app reads a bundled snapshot and never sends a GitHub token or fetches new
-catalog data at runtime. New catalog snapshots arrive with new app builds.
+shows collection dates, verified star counts where available and source licenses.
+On launch, the app checks the latest public catalog from this repository's `main`
+branch on GitHub. The **Refresh resources** button repeats that check. The library
+labels downloaded and bundled snapshots separately and flags metadata older than
+24 hours. A failed refresh retains the current snapshot; the bundled edition is
+available offline from startup. No token, progress, notes, cookies or account
+credentials are sent. The fixed HTTPS download rejects redirects, uses request
+and total-resource timeouts, and stops at 2 MB before validating the catalog.
 
 The server-side resource refresh writes `resources/catalog.json`. Run
 `python3 scripts/sync-resource-catalog.py` after refreshing to update the native
@@ -123,4 +128,4 @@ review are separate release checks. Record their actual results before publishin
 
 ## GitHub resource collection
 
-Explore the project-specific [resource catalog](resources/README.md): curated references, star-ranked discovery, dated source metadata, cached failure recovery and an optional read-only server API. The repository includes a daily refresh workflow; hosted sites still follow their existing deployment process.
+Explore the project-specific [resource catalog](resources/README.md): curated references, star-ranked discovery, dated source metadata, cached failure recovery and an optional read-only server API. The daily refresh workflow updates the public catalog. The native Library checks for that catalog on launch and falls back to its bundled edition; app-code updates require a new build.

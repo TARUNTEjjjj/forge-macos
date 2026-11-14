@@ -2,6 +2,10 @@ import XCTest
 import ForgeCheckSupport
 
 final class ForgeCoreTests: XCTestCase {
+    func testRemoteGitHubCatalogDownloadsAndValidates() throws { try ForgeCoreChecks.run("testRemoteGitHubCatalogDownloadsAndValidates") }
+    func testRemoteGitHubCatalogRejectsUnsafeResponses() throws { try ForgeCoreChecks.run("testRemoteGitHubCatalogRejectsUnsafeResponses") }
+    func testGitHubCatalogAgeHonesty() throws { try ForgeCoreChecks.run("testGitHubCatalogAgeHonesty") }
+
     func testBundledGitHubCatalogAndSearch() throws { try ForgeCoreChecks.run("testBundledGitHubCatalogAndSearch") }
     func testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries() throws { try ForgeCoreChecks.run("testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries") }
 

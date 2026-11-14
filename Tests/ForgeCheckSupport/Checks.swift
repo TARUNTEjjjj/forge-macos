@@ -5,6 +5,9 @@ public enum ForgeCoreChecks {
     public static let names: [String] = [
         "testBundledGitHubCatalogAndSearch",
         "testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries",
+        "testRemoteGitHubCatalogDownloadsAndValidates",
+        "testRemoteGitHubCatalogRejectsUnsafeResponses",
+        "testGitHubCatalogAgeHonesty",
         "testBundledCurriculumHasCompleteLearningPath",
         "testNewStoreIsEmptyWithoutCreatingFile",
         "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip",
@@ -34,6 +37,9 @@ public enum ForgeCoreChecks {
         switch name {
         case "testBundledGitHubCatalogAndSearch": try cases.testBundledGitHubCatalogAndSearch()
         case "testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries": try cases.testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries()
+        case "testRemoteGitHubCatalogDownloadsAndValidates": try cases.testRemoteGitHubCatalogDownloadsAndValidates()
+        case "testRemoteGitHubCatalogRejectsUnsafeResponses": try cases.testRemoteGitHubCatalogRejectsUnsafeResponses()
+        case "testGitHubCatalogAgeHonesty": try cases.testGitHubCatalogAgeHonesty()
         case "testBundledCurriculumHasCompleteLearningPath": try cases.testBundledCurriculumHasCompleteLearningPath()
         case "testNewStoreIsEmptyWithoutCreatingFile": try cases.testNewStoreIsEmptyWithoutCreatingFile()
         case "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip": try cases.testProgressSurvivesNewStoreInstanceAndBackupRoundTrip()
@@ -127,6 +133,35 @@ private final class CoreCases {
         document["items"] = [item]
         document["schemaVersion"] = 2
         try XCTAssertThrowsError(ResourceCatalog.decode(JSONSerialization.data(withJSONObject: document)))
+    }
+
+    func testRemoteGitHubCatalogDownloadsAndValidates() throws {
+        let local = try ResourceCatalog.loadBundled()
+        let data = try catalogFixtureData()
+        let downloaded = try fetchCatalogFixture(data)
+        try XCTAssertEqual(downloaded.project, local.project)
+        try XCTAssertEqual(downloaded.items.first?.fullName, "python/cpython")
+        try XCTAssertEqual(CatalogFixtureProtocol.requestedURL, ResourceCatalog.latestURL)
+    }
+
+    func testRemoteGitHubCatalogRejectsUnsafeResponses() throws {
+        let data = try catalogFixtureData()
+        try XCTAssertThrowsError(fetchCatalogFixture(data, status: 503))
+        try XCTAssertThrowsError(fetchCatalogFixture(data, status: 302))
+        try XCTAssertThrowsError(fetchCatalogFixture(data, declaredSize: ResourceCatalog.maximumDownloadBytes + 1))
+        try XCTAssertThrowsError(fetchCatalogFixture(Data(repeating: 32, count: ResourceCatalog.maximumDownloadBytes + 1)))
+        try XCTAssertThrowsError(fetchCatalogFixture(Data("{}".utf8)))
+        try XCTAssertThrowsError(fetchCatalogFixture(data, error: URLError(.notConnectedToInternet)))
+    }
+
+    func testGitHubCatalogAgeHonesty() throws {
+        let catalog = try ResourceCatalog.decode(catalogFixtureData())
+        let resource = try XCTUnwrap(catalog.items.first)
+        let formatter = ISO8601DateFormatter()
+        let fresh = try XCTUnwrap(formatter.date(from: "2026-11-14T01:00:00Z"))
+        let old = try XCTUnwrap(formatter.date(from: "2026-11-16T00:00:00Z"))
+        try XCTAssertFalse(resource.isStale(at: fresh))
+        try XCTAssertTrue(resource.isStale(at: old))
     }
 
     func setUpWithError() throws {
@@ -379,4 +414,60 @@ private final class CoreCases {
                                          minutes: 25, reflection: "Ran the script twice", moduleID: "f01")
                          ])
     }
+}
+
+private func catalogFixtureData() throws -> Data {
+    let item: [String: Any] = ["fullName": "python/cpython", "url": "https://github.com/python/cpython", "description": "Python language", "topics": ["python"], "stars": 100, "license": NSNull(), "category": "languages", "fetchedAt": "2026-11-14T00:00:00.000Z", "stale": false]
+    let document: [String: Any] = ["schemaVersion": 1, "project": "forge-macos", "title": "Resources", "fetchedAt": "2026-11-14T00:00:00.000Z", "status": "live", "categories": [["id": "languages", "title": "Languages"]], "items": [item]]
+    return try JSONSerialization.data(withJSONObject: document)
+}
+
+private final class CatalogFixtureProtocol: URLProtocol, @unchecked Sendable {
+    static var bytes = Data()
+    static var status = 200
+    static var declaredSize: Int?
+    static var transportError: URLError?
+    static var requestedURL: URL?
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        Self.requestedURL = request.url
+        if let error = Self.transportError { client?.urlProtocol(self, didFailWithError: error); return }
+        var headers = ["Content-Type": "application/json"]
+        if let size = Self.declaredSize { headers["Content-Length"] = String(size) }
+        let response = HTTPURLResponse(url: request.url!, statusCode: Self.status, httpVersion: "HTTP/1.1", headerFields: headers)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Self.bytes)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+
+private final class CatalogFixtureResult: @unchecked Sendable {
+    private let lock = NSLock()
+    private var result: Result<ResourceCatalog, Error>?
+    func set(_ value: Result<ResourceCatalog, Error>) { lock.lock(); defer { lock.unlock() }; result = value }
+    func get() throws -> ResourceCatalog { lock.lock(); defer { lock.unlock() }; return try result!.get() }
+}
+
+private func fetchCatalogFixture(_ data: Data, status: Int = 200, declaredSize: Int? = nil, error: URLError? = nil) throws -> ResourceCatalog {
+    CatalogFixtureProtocol.bytes = data
+    CatalogFixtureProtocol.status = status
+    CatalogFixtureProtocol.declaredSize = declaredSize
+    CatalogFixtureProtocol.transportError = error
+    CatalogFixtureProtocol.requestedURL = nil
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [CatalogFixtureProtocol.self]
+    let box = CatalogFixtureResult()
+    let done = DispatchSemaphore(value: 0)
+    let task = Task.detached {
+        do { box.set(.success(try await ResourceCatalog.loadLatest(configuration: configuration))) }
+        catch { box.set(.failure(error)) }
+        done.signal()
+    }
+    if done.wait(timeout: .now() + 10) != .success {
+        task.cancel()
+        throw CheckFailure(description: "Fixture catalog request exceeded its deadline")
+    }
+    return try box.get()
 }

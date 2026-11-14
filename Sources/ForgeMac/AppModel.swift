@@ -25,6 +25,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var curriculum: Curriculum?
     @Published private(set) var resourceCatalog: ResourceCatalog?
     @Published private(set) var resourceCatalogError: String?
+    @Published private(set) var resourceCatalogOrigin = "Bundled offline snapshot"
+    @Published private(set) var isRefreshingResourceCatalog = false
+    @Published private(set) var resourceCatalogRefreshNotice: String?
     @Published private(set) var progress = ProgressSnapshot()
     @Published private(set) var readOnly = false
     @Published var message: String?
@@ -37,7 +40,7 @@ final class AppModel: ObservableObject {
     @Published var sessionModuleIDDraft = ""
     private var store: ProgressFileStore?
 
-    init(progressURL: URL? = nil) {
+    init(progressURL: URL? = nil, refreshCatalogOnLaunch: Bool = true) {
         do { resourceCatalog = try ResourceCatalog.loadBundled() }
         catch { resourceCatalogError = error.localizedDescription }
         do {
@@ -58,6 +61,26 @@ final class AppModel: ObservableObject {
         } catch {
             readOnly = true
             message = "Your saved data was left untouched. \(error.localizedDescription) Restore a valid Forge Mac backup to continue saving."
+        }
+        if refreshCatalogOnLaunch { refreshResourceCatalog() }
+    }
+
+    func refreshResourceCatalog() {
+        guard !isRefreshingResourceCatalog else { return }
+        isRefreshingResourceCatalog = true
+        resourceCatalogRefreshNotice = nil
+        Task {
+            defer { isRefreshingResourceCatalog = false }
+            do {
+                let current = try await ResourceCatalog.loadLatest()
+                resourceCatalog = current
+                resourceCatalogOrigin = "Downloaded GitHub snapshot"
+                resourceCatalogError = nil
+            } catch {
+                resourceCatalogRefreshNotice = resourceCatalog == nil
+                    ? "The GitHub catalog could not be loaded. The original learning references remain available."
+                    : "Could not refresh from GitHub. Showing the last loaded snapshot."
+            }
         }
     }
 

@@ -13,6 +13,22 @@ private notes and reflections; the user controls where it is stored or shared. I
 validates the file before replacing current progress. The app's normal macOS storage
 is private to that app when running with App Sandbox.
 
+## Public resource catalog
+
+At launch, and when **Refresh resources** is selected, Forge requests one public
+JSON catalog from the fixed URL
+`https://raw.githubusercontent.com/TARUNTEjjjj/forge-macos/main/resources/catalog.json`.
+GitHub receives ordinary connection details such as the IP address and the
+requested public path. The request contains no lesson progress, notes, search
+text, cookies, access token or account credentials. Catalog searches run locally.
+The ephemeral session has no disk cache or credential store, rejects redirects,
+limits the download to 2 MB and validates source URLs before showing entries.
+
+The downloaded catalog stays in memory for the current app session. It never
+changes native progress storage. A failed check preserves the last loaded
+snapshot, and every launch starts with the bundled offline edition. The Library
+shows which edition is displayed, its collection date and stale-data notices.
+
 ## Online labs and source links
 
 Loading the online labs contacts `forge-learning-academy.pages.dev`. The website and
