@@ -2,6 +2,9 @@ import XCTest
 import ForgeCheckSupport
 
 final class ForgeCoreTests: XCTestCase {
+    func testBundledGitHubCatalogAndSearch() throws { try ForgeCoreChecks.run("testBundledGitHubCatalogAndSearch") }
+    func testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries() throws { try ForgeCoreChecks.run("testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries") }
+
     func testBundledCurriculumHasCompleteLearningPath() throws { try ForgeCoreChecks.run("testBundledCurriculumHasCompleteLearningPath") }
     func testNewStoreIsEmptyWithoutCreatingFile() throws { try ForgeCoreChecks.run("testNewStoreIsEmptyWithoutCreatingFile") }
     func testProgressSurvivesNewStoreInstanceAndBackupRoundTrip() throws { try ForgeCoreChecks.run("testProgressSurvivesNewStoreInstanceAndBackupRoundTrip") }

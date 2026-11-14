@@ -23,6 +23,8 @@ final class AppModel: ObservableObject {
     @Published var selectedModuleID: String?
     @Published var search = ""
     @Published private(set) var curriculum: Curriculum?
+    @Published private(set) var resourceCatalog: ResourceCatalog?
+    @Published private(set) var resourceCatalogError: String?
     @Published private(set) var progress = ProgressSnapshot()
     @Published private(set) var readOnly = false
     @Published var message: String?
@@ -36,6 +38,8 @@ final class AppModel: ObservableObject {
     private var store: ProgressFileStore?
 
     init(progressURL: URL? = nil) {
+        do { resourceCatalog = try ResourceCatalog.loadBundled() }
+        catch { resourceCatalogError = error.localizedDescription }
         do {
             let catalog = try Curriculum.loadBundled()
             curriculum = catalog

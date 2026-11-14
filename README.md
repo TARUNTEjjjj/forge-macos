@@ -13,7 +13,8 @@ The shared `ForgeCore` models can support a later iOS interface.
 ## Run on your Mac
 
 Install Apple's Xcode Command Line Tools or full Xcode, with Swift 5.9 or later.
-This project has no third-party Swift dependencies.
+This project has no third-party Swift dependencies. Python 3 stages the checked-in
+resource catalog for the command-line build wrapper.
 
 ```sh
 ./scripts/test.sh
@@ -41,6 +42,19 @@ so it also works with Command Line Tools. Full Xcode additionally supports
 The release steps and remaining verification are in [Mac App Store release](docs/mac-app-store.md).
 The project includes App Sandbox entitlements, a privacy manifest, and a custom
 vector-generated icon. These are preparation for distribution, not Apple approval.
+
+## GitHub resource library
+
+The Library includes a searchable, category-filtered collection of relevant
+open-source projects alongside the original official learning references. It
+shows snapshot dates, verified star counts where available and source licenses.
+The app reads a bundled snapshot and never sends a GitHub token or fetches new
+catalog data at runtime. New catalog snapshots arrive with new app builds.
+
+The server-side resource refresh writes `resources/catalog.json`. Run
+`python3 scripts/sync-resource-catalog.py` after refreshing to update the native
+bundle before an Xcode build. The Swift command wrapper does this automatically.
+A damaged catalog leaves the original learning library and progress available.
 
 ## Where the data lives
 
@@ -106,3 +120,7 @@ The initial environment has Command Line Tools but no full Xcode. Swift package
 compilation/tests and app assembly can be checked there. Xcode archive validation,
 provisioned signing, TestFlight, both Mac architectures, VoiceOver, and App Store
 review are separate release checks. Record their actual results before publishing.
+
+## GitHub resource collection
+
+Explore the project-specific [resource catalog](resources/README.md): curated references, star-ranked discovery, dated source metadata, cached failure recovery and an optional read-only server API. The repository includes a daily refresh workflow; hosted sites still follow their existing deployment process.

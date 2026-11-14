@@ -3,6 +3,8 @@ import ForgeCore
 
 public enum ForgeCoreChecks {
     public static let names: [String] = [
+        "testBundledGitHubCatalogAndSearch",
+        "testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries",
         "testBundledCurriculumHasCompleteLearningPath",
         "testNewStoreIsEmptyWithoutCreatingFile",
         "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip",
@@ -30,6 +32,8 @@ public enum ForgeCoreChecks {
         try cases.setUpWithError()
         defer { try? cases.tearDownWithError() }
         switch name {
+        case "testBundledGitHubCatalogAndSearch": try cases.testBundledGitHubCatalogAndSearch()
+        case "testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries": try cases.testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries()
         case "testBundledCurriculumHasCompleteLearningPath": try cases.testBundledCurriculumHasCompleteLearningPath()
         case "testNewStoreIsEmptyWithoutCreatingFile": try cases.testNewStoreIsEmptyWithoutCreatingFile()
         case "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip": try cases.testProgressSurvivesNewStoreInstanceAndBackupRoundTrip()
@@ -96,6 +100,34 @@ private func XCTUnwrap<T>(_ value: T?) throws -> T {
 private final class CoreCases {
     private var directory: URL!
     private var store: ProgressFileStore!
+
+    func testBundledGitHubCatalogAndSearch() throws {
+        let catalog = try ResourceCatalog.loadBundled()
+        try XCTAssertEqual(catalog.project, "forge-macos")
+        try XCTAssertTrue(!catalog.items.isEmpty)
+        let first = try XCTUnwrap(catalog.items.first)
+        try XCTAssertTrue(catalog.matching(first.fullName).contains { $0.id == first.id })
+        try XCTAssertTrue(catalog.matching("", category: first.category).allSatisfy { $0.category == first.category })
+        try XCTAssertTrue(catalog.matching("there-is-no-project-with-this-name").isEmpty)
+    }
+
+    func testGitHubCatalogRejectsUnsafeLinksAndDuplicateEntries() throws {
+        let item: [String: Any] = ["fullName": "python/cpython", "url": "https://github.com/python/cpython", "description": "Python language", "topics": ["python"], "stars": NSNull(), "license": NSNull(), "category": "languages", "fetchedAt": NSNull(), "stale": false]
+        var document: [String: Any] = ["schemaVersion": 1, "project": "forge-macos", "title": "Resources", "fetchedAt": NSNull(), "status": "seed", "categories": [["id": "languages", "title": "Languages"]], "items": [item]]
+        let valid = try ResourceCatalog.decode(JSONSerialization.data(withJSONObject: document))
+        try XCTAssertEqual(valid.items.first?.stars, nil)
+        for url in ["javascript:alert(1)", "https://example.com/python/cpython", "https://github.com@evil.example/python/cpython", "https://github.com/python/cpython?token=example"] {
+            var unsafe = item
+            unsafe["url"] = url
+            document["items"] = [unsafe]
+            try XCTAssertThrowsError(ResourceCatalog.decode(JSONSerialization.data(withJSONObject: document)))
+        }
+        document["items"] = [item, item]
+        try XCTAssertThrowsError(ResourceCatalog.decode(JSONSerialization.data(withJSONObject: document)))
+        document["items"] = [item]
+        document["schemaVersion"] = 2
+        try XCTAssertThrowsError(ResourceCatalog.decode(JSONSerialization.data(withJSONObject: document)))
+    }
 
     func setUpWithError() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("ForgeCoreTests-\(UUID().uuidString)")

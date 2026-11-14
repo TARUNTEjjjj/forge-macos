@@ -127,11 +127,43 @@ private struct LessonReader: View {
 struct ResourceLibraryView: View {
     @EnvironmentObject var model: AppModel
     @ViewState<String> private var query = ""
+    @ViewState<String> private var catalogCategory = ""
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 PageHeader(eyebrow: "Keep good references close", title: "The library", subtitle: "Official documentation and original problem judges. Work through the lessons, then go deeper at the source.")
                 TextField("Search resources and problems", text: $query).textFieldStyle(.roundedBorder)
+                if let catalog = model.resourceCatalog {
+                    Text("Open-source discovery").font(.title2.bold())
+                    Text(catalog.status == "seed" ? "Curated starting points. Live popularity has not been checked." : "Bundled snapshot · " + (catalog.fetchedAt ?? "date unavailable") + " · " + catalog.status)
+                        .font(.caption).foregroundStyle(ForgeTheme.muted)
+                    Text("Explore relevant GitHub projects. Stars describe popularity; the source and license remain with each project. Updates arrive with new app builds.")
+                        .font(.callout).foregroundStyle(ForgeTheme.muted)
+                    Picker("Resource category", selection: $catalogCategory) {
+                        Text("All categories").tag("")
+                        ForEach(catalog.categories) { category in Text(category.title).tag(category.id) }
+                    }.pickerStyle(.menu)
+                    let matches = catalog.matching(query, category: catalogCategory)
+                    if matches.isEmpty { Text("No GitHub resources match this search.").foregroundStyle(ForgeTheme.muted) }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 280))], alignment: .leading, spacing: 14) {
+                        ForEach(matches) { resource in
+                            ForgeCard {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Eyebrow(text: resource.category)
+                                    Text(resource.fullName).font(.system(size: 17, weight: .semibold))
+                                    Text(resource.description).font(.system(size: 12)).foregroundStyle(ForgeTheme.muted).lineLimit(4)
+                                    Text((resource.stars.map { "\($0.formatted()) stars" } ?? "Stars unverified") + " · " + (resource.license ?? "License unreported"))
+                                        .font(.caption).foregroundStyle(ForgeTheme.muted)
+                                    if resource.stale { Text("Previous snapshot · check the source for current details").font(.caption).foregroundStyle(ForgeTheme.muted) }
+                                    Button("Open on GitHub ↗") { model.openExternal(resource.url) }.buttonStyle(.link)
+                                }.frame(minHeight: 160, alignment: .top)
+                            }
+                        }
+                    }
+                } else if let error = model.resourceCatalogError {
+                    Text(error).font(.callout).foregroundStyle(ForgeTheme.muted)
+                }
+                Text("Official learning references").font(.title2.bold())
                 if let curriculum = model.curriculum {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 280))], alignment: .leading, spacing: 14) {
                         ForEach(curriculum.resources.filter { query.isEmpty || ($0.title + " " + $0.topic).localizedCaseInsensitiveContains(query) }) { resource in
