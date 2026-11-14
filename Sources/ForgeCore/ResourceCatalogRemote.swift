@@ -48,14 +48,7 @@ extension CatalogResource {
     public func isStale(at now: Date = Date()) -> Bool {
         if stale { return true }
         guard let fetchedAt else { return stars != nil }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        var verified = formatter.date(from: fetchedAt)
-        if verified == nil {
-            formatter.formatOptions = [.withInternetDateTime]
-            verified = formatter.date(from: fetchedAt)
-        }
-        guard let verified else { return true }
+        guard let verified = ResourceCatalog.collectionDate(from: fetchedAt) else { return true }
         return now.timeIntervalSince(verified) > 24 * 60 * 60
     }
 }

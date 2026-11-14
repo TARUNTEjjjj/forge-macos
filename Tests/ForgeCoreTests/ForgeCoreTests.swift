@@ -2,6 +2,12 @@ import XCTest
 import ForgeCheckSupport
 
 final class ForgeCoreTests: XCTestCase {
+    func testCatalogCacheSurvivesRestartWithoutTouchingProgress() throws { try ForgeCoreChecks.run("testCatalogCacheSurvivesRestartWithoutTouchingProgress") }
+    func testCatalogCacheRejectsAndRepairsDamagedFiles() throws { try ForgeCoreChecks.run("testCatalogCacheRejectsAndRepairsDamagedFiles") }
+    func testCatalogCacheInvalidSavePreservesLastGoodBytes() throws { try ForgeCoreChecks.run("testCatalogCacheInvalidSavePreservesLastGoodBytes") }
+    func testCatalogCacheFailedWritePreservesLastGoodBytes() throws { try ForgeCoreChecks.run("testCatalogCacheFailedWritePreservesLastGoodBytes") }
+    func testCatalogCacheRejectsSymlinksAndDirectories() throws { try ForgeCoreChecks.run("testCatalogCacheRejectsSymlinksAndDirectories") }
+    func testCatalogCacheKeepsNewestCollection() throws { try ForgeCoreChecks.run("testCatalogCacheKeepsNewestCollection") }
     func testRemoteGitHubCatalogDownloadsAndValidates() throws { try ForgeCoreChecks.run("testRemoteGitHubCatalogDownloadsAndValidates") }
     func testRemoteGitHubCatalogRejectsUnsafeResponses() throws { try ForgeCoreChecks.run("testRemoteGitHubCatalogRejectsUnsafeResponses") }
     func testGitHubCatalogAgeHonesty() throws { try ForgeCoreChecks.run("testGitHubCatalogAgeHonesty") }
