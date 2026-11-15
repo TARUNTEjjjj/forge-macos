@@ -10,8 +10,11 @@ used. The privacy manifest describes this native implementation.
 
 Export creates a JSON file at a location selected by the user. That file can contain
 private notes and reflections; the user controls where it is stored or shared. Import
-validates the file before replacing current progress. The app's normal macOS storage
-is private to that app when running with App Sandbox.
+validates the file before replacing current progress. Before a restore replaces saved
+progress, the app keeps the previous file as a dated recovery copy in its own storage.
+These copies also contain notes and reflections. Choose File > Show Recovery Copies in
+Finder to keep, move, or delete them. The app's normal macOS storage is private to that
+app when running with App Sandbox.
 
 ## Public resource catalog
 

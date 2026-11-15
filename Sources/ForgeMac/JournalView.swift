@@ -15,14 +15,17 @@ struct JournalView: View {
     }
     var body: some View {
         let displayedDates = dates
-        let dailyMinutes = model.progress.minutes(on: displayedDates)
+        // Typing in this view's editors redraws it on every keystroke, so history-sized totals
+        // and the matching sessions come from the model's copies, recomputed only when saved
+        // progress or the search changes.
+        let dailyMinutes = model.minutes(on: displayedDates)
         let peak = max(1, dailyMinutes.max() ?? 1)
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let since = historyDays > 0 ? calendar.date(byAdding: .day, value: 1 - historyDays, to: today) : nil
         let before = historyDays > 0 ? calendar.date(byAdding: .day, value: 1, to: today) : nil
-        let titles = Dictionary(uniqueKeysWithValues: (model.curriculum?.modules ?? []).map { ($0.id, $0.title) })
-        let sessions = model.progress.filteredSessions(query: sessionSearch, moduleID: lessonFilter == "all" ? nil : lessonFilter, since: since, before: before, moduleTitles: titles)
+        let matches = model.matchingSessions(query: sessionSearch, moduleID: lessonFilter == "all" ? nil : lessonFilter, since: since, before: before)
+        let sessions = matches.sessions
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
                 PageHeader(eyebrow: "Make the practice visible", title: "Your practice journal", subtitle: "Choose a focus. Do the work. Record the evidence. Time logged here is your own record, separate from online lab progress.")
@@ -60,7 +63,8 @@ struct JournalView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Record a session").font(.title3.bold())
                         HStack(spacing: 20) {
-                            Stepper("\(model.sessionMinutesDraft) minute\(model.sessionMinutesDraft == 1 ? "" : "s")", value: $model.sessionMinutesDraft, in: 1...720, step: 5).frame(width: 190)
+                            Stepper("\(model.sessionMinutesDraft) minute\(model.sessionMinutesDraft == 1 ? "" : "s")",
+                                    onIncrement: stepMinutes(longer: true), onDecrement: stepMinutes(longer: false)).frame(width: 190)
                             Picker("Lesson", selection: $model.sessionModuleIDDraft) {
                                 Text("Independent practice").tag("")
                                 ForEach(model.curriculum?.modules ?? []) { module in Text(module.title).tag(module.id) }
@@ -95,7 +99,7 @@ struct JournalView: View {
                             Text("Last 30 days").tag(30)
                         }.frame(maxWidth: 220)
                     }
-                    Text("\(sessions.count) matching sessions · \(sessions.reduce(0) { $0 + $1.minutes }) minutes").font(.caption).foregroundStyle(ForgeTheme.muted)
+                    Text("\(sessions.count) matching sessions · \(matches.minutes) minutes").font(.caption).foregroundStyle(ForgeTheme.muted)
                 }
                 .onChange(of: sessionSearch) { _, _ in visibleCount = 50 }
                 .onChange(of: lessonFilter) { _, _ in visibleCount = 50 }
@@ -133,5 +137,22 @@ struct JournalView: View {
             }
             Button("Cancel", role: .cancel) { deleteSession = nil }
         }
+    }
+
+    /// The minutes Stepper's action, or nil at either end so that arrow is disabled.
+    /// It reads the draft when pressed, so a held arrow keeps stepping.
+    private func stepMinutes(longer: Bool) -> (() -> Void)? {
+        guard Self.sessionMinutes(after: model.sessionMinutesDraft, longer: longer) != nil else { return nil }
+        return {
+            if let next = Self.sessionMinutes(after: model.sessionMinutesDraft, longer: longer) { model.sessionMinutesDraft = next }
+        }
+    }
+
+    /// The session length one Stepper press away: the next multiple of 5 up or down,
+    /// within the 1...720 minutes a session can hold. The shortest length, 1 minute, is
+    /// below that grid, so pressing up from it lands on 5 instead of 6. Nil at either end.
+    static func sessionMinutes(after minutes: Int, longer: Bool) -> Int? {
+        let next = longer ? (minutes / 5 + 1) * 5 : max(1, (minutes - 1) / 5 * 5)
+        return next != minutes && (1...ProgressFileStore.maximumSessionMinutes).contains(next) ? next : nil
     }
 }

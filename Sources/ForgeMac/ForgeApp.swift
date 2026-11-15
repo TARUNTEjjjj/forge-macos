@@ -30,28 +30,46 @@ enum ForgeLauncher {
 }
 
 struct ForgeApp: App {
+    static let windowID = "forge"
     @NSApplicationDelegateAdaptor(ForgeLifecycle.self) private var lifecycle
     @StateObject private var model = AppModel()
     var body: some Scene {
-        WindowGroup("Forge") {
+        WindowGroup("Forge", id: Self.windowID) {
             ForgeWindow().environmentObject(model).preferredColorScheme(.dark)
                 .frame(minWidth: 880, minHeight: 640)
                 .onAppear { lifecycle.model = model }
         }
         .defaultSize(width: 1260, height: 840)
-        .commands {
-            CommandGroup(after: .newItem) {
-                Button("Export Learning Backup…") { model.exportBackup() }
-                    .keyboardShortcut("e", modifiers: [.command, .shift]).disabled(model.readOnly)
-                Button("Restore Learning Backup…") { model.chooseBackup() }
-                    .keyboardShortcut("o", modifiers: [.command, .shift])
-            }
-            CommandMenu("Learn") {
-                ForEach(Destination.allCases) { destination in
-                    Button(destination.rawValue) { model.destination = destination }
-                }
+        .commands { ForgeCommands(model: model) }
+    }
+}
+
+/// The File and Learn commands stay available with no Forge window open, but what they show
+/// (the restore confirmation, a backup message, the chosen page) appears in a Forge window.
+/// So a command opens one when there is none, instead of leaving its result unseen.
+struct ForgeCommands: Commands {
+    @ObservedObject var model: AppModel
+    @Environment(\.openWindow) private var openWindow
+    var body: some Commands {
+        CommandGroup(after: .newItem) {
+            Button("Export Learning Backup…") { model.exportBackup(); showPendingAlert() }
+                .keyboardShortcut("e", modifiers: [.command, .shift]).disabled(model.readOnly)
+            Button("Restore Learning Backup…") { model.chooseBackup(); showPendingAlert() }
+                .keyboardShortcut("o", modifiers: [.command, .shift])
+            Button("Show Recovery Copies in Finder") { model.showRecoveryCopies() }
+                .disabled(model.recoveryCopies.isEmpty)
+        }
+        CommandMenu("Learn") {
+            ForEach(Destination.allCases) { destination in
+                Button(destination.rawValue) { model.destination = destination; showWindow() }
             }
         }
+    }
+    private func showPendingAlert() {
+        if model.message != nil || model.showRestoreConfirmation { showWindow() }
+    }
+    private func showWindow() {
+        if model.openWindows == 0 { openWindow(id: ForgeApp.windowID) }
     }
 }
 
@@ -67,6 +85,8 @@ final class ForgeLifecycle: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
+        // Another copy of Forge may have saved progress while this one was in the background.
+        model?.adoptNewerSavedProgress()
         model?.refreshResourceCatalogIfDue()
     }
 
@@ -136,6 +156,9 @@ struct ForgeWindow: View {
         .alert("Restore this backup?", isPresented: $model.showRestoreConfirmation) {
             Button("Cancel", role: .cancel) { model.backupCandidate = nil }
             Button("Restore", role: .destructive) { model.confirmRestore() }
-        } message: { Text("This replaces native lesson progress, notes, focus, and study sessions. A recovery copy of the existing file will be kept. Online labs are unaffected.") }
+        } message: { Text(model.restoreConfirmationText) }
+        // These alerts can only appear in a Forge window, so the commands need to know if one is open.
+        .onAppear { model.openWindows += 1 }
+        .onDisappear { model.openWindows -= 1 }
     }
 }

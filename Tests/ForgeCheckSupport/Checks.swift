@@ -19,14 +19,21 @@ public enum ForgeCoreChecks {
         "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip",
         "testImportOnlyValidatesUntilUserChoosesToRestore",
         "testMalformedAndTruncatedBackupsAreRejected",
-        "testUnknownVersionsAndModuleIDsAreRejected",
+        "testUnknownVersionsAreRejected",
+        "testProgressForLessonsOutsideTheCurriculumIsKept",
+        "testFieldsFromOtherForgeVersionsAreKept",
+        "testNumbersFromOtherForgeVersionsAreKeptExactlyOrLeftOut",
         "testSessionDurationAndDuplicateIDsAreValidated",
         "testInvalidSessionDatesAreRejected",
         "testTextLimitsCountUTF8Bytes",
         "testOversizedBackupRejectedBeforeDecoding",
+        "testSessionLimitWithLongReflectionsSavesAndRestores",
         "testInvalidSavePreservesPreviousSnapshotBytes",
         "testDamagedFileIsPreservedAndNotSilentlyReset",
+        "testSaveRechecksFilesChangedOutsideTheStore",
+        "testOlderProgressNeverReplacesProgressSavedElsewhere",
         "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup",
+        "testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile",
         "testInvalidRecoveryDoesNotTouchExistingData",
         "testReadOnlyDestinationFailsWithoutReportingSuccess",
         "testCalendarTotalsUseLearnersTimezone",
@@ -57,14 +64,21 @@ public enum ForgeCoreChecks {
         case "testProgressSurvivesNewStoreInstanceAndBackupRoundTrip": try cases.testProgressSurvivesNewStoreInstanceAndBackupRoundTrip()
         case "testImportOnlyValidatesUntilUserChoosesToRestore": try cases.testImportOnlyValidatesUntilUserChoosesToRestore()
         case "testMalformedAndTruncatedBackupsAreRejected": try cases.testMalformedAndTruncatedBackupsAreRejected()
-        case "testUnknownVersionsAndModuleIDsAreRejected": try cases.testUnknownVersionsAndModuleIDsAreRejected()
+        case "testUnknownVersionsAreRejected": try cases.testUnknownVersionsAreRejected()
+        case "testProgressForLessonsOutsideTheCurriculumIsKept": try cases.testProgressForLessonsOutsideTheCurriculumIsKept()
+        case "testFieldsFromOtherForgeVersionsAreKept": try cases.testFieldsFromOtherForgeVersionsAreKept()
+        case "testNumbersFromOtherForgeVersionsAreKeptExactlyOrLeftOut": try cases.testNumbersFromOtherForgeVersionsAreKeptExactlyOrLeftOut()
         case "testSessionDurationAndDuplicateIDsAreValidated": try cases.testSessionDurationAndDuplicateIDsAreValidated()
         case "testInvalidSessionDatesAreRejected": try cases.testInvalidSessionDatesAreRejected()
         case "testTextLimitsCountUTF8Bytes": try cases.testTextLimitsCountUTF8Bytes()
         case "testOversizedBackupRejectedBeforeDecoding": try cases.testOversizedBackupRejectedBeforeDecoding()
+        case "testSessionLimitWithLongReflectionsSavesAndRestores": try cases.testSessionLimitWithLongReflectionsSavesAndRestores()
         case "testInvalidSavePreservesPreviousSnapshotBytes": try cases.testInvalidSavePreservesPreviousSnapshotBytes()
         case "testDamagedFileIsPreservedAndNotSilentlyReset": try cases.testDamagedFileIsPreservedAndNotSilentlyReset()
+        case "testSaveRechecksFilesChangedOutsideTheStore": try cases.testSaveRechecksFilesChangedOutsideTheStore()
+        case "testOlderProgressNeverReplacesProgressSavedElsewhere": try cases.testOlderProgressNeverReplacesProgressSavedElsewhere()
         case "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup": try cases.testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup()
+        case "testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile": try cases.testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile()
         case "testInvalidRecoveryDoesNotTouchExistingData": try cases.testInvalidRecoveryDoesNotTouchExistingData()
         case "testReadOnlyDestinationFailsWithoutReportingSuccess": try cases.testReadOnlyDestinationFailsWithoutReportingSuccess()
         case "testCalendarTotalsUseLearnersTimezone": try cases.testCalendarTotalsUseLearnersTimezone()
@@ -342,19 +356,98 @@ private final class CoreCases {
         }
     }
 
-    func testUnknownVersionsAndModuleIDsAreRejected() throws {
+    func testUnknownVersionsAreRejected() throws {
         var snapshot = sampleSnapshot()
         snapshot.version = 99
         try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .unsupportedVersion) }
-        snapshot.version = 1
-        snapshot.completedModuleIDs.insert("not-a-lesson")
-        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidModule) }
-        snapshot = sampleSnapshot()
-        snapshot.notes["not-a-lesson"] = "unexpected"
-        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidModule) }
-        snapshot = sampleSnapshot()
-        snapshot.sessions[0].moduleID = "not-a-lesson"
-        try XCTAssertThrowsError(try store.exportData(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidModule) }
+    }
+
+    func testProgressForLessonsOutsideTheCurriculumIsKept() throws {
+        // A later curriculum can rename or retire a lesson. Progress and backups that
+        // name it must still load, save and restore, with that lesson's data intact.
+        var snapshot = sampleSnapshot()
+        snapshot.completedModuleIDs.insert("retired-lesson")
+        snapshot.notes["retired-lesson"] = "Still mine"
+        snapshot.sessions.append(StudySession(date: Date(timeIntervalSince1970: 1_793_361_600), minutes: 40,
+                                              reflection: "Practice for a retired lesson", moduleID: "retired-lesson"))
+        let backup = try store.exportData(snapshot)
+        try XCTAssertEqual(try store.importData(backup), snapshot)
+        try store.save(snapshot)
+        let restarted = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        var loaded = try restarted.load()
+        try XCTAssertEqual(loaded, snapshot)
+        loaded.completedModuleIDs.insert("f02")
+        try restarted.save(loaded)
+        try XCTAssertEqual(try restarted.load(), loaded)
+        try XCTAssertEqual(try restarted.recoverFromBackup(backup), snapshot)
+        try XCTAssertEqual(loaded.completedModuleCount(in: try Curriculum.loadBundled()), 2)
+    }
+
+    func testFieldsFromOtherForgeVersionsAreKept() throws {
+        // A newer build may add fields while keeping version 1. Restoring, saving and
+        // exporting here must write them back unchanged rather than dropping them.
+        let backup = Data("""
+        {"version": 1, "completedModuleIDs": ["f01"], "notes": {"f01": "Paths"}, "dailyFocus": "Graphs",
+         "streakGoal": {"minutes": 30, "days": [1, 2.5, true, null, "mon"]},
+         "sessions": [{"id": "48777513-9059-44AB-B5AF-B5BC3EC7D266", "date": "2026-10-29T18:20:00Z", "minutes": 25,
+                       "reflection": "BFS", "moduleID": "f01", "tags": ["bfs", {"level": 2}]}]}
+        """.utf8)
+        let original = try jsonFields(backup)
+        let goal = try XCTUnwrap(original["streakGoal"] as? NSDictionary)
+        let tags = try XCTUnwrap(firstSessionFields(original)["tags"] as? NSArray)
+        func assertKept(_ data: Data) throws {
+            let written = try jsonFields(data)
+            try XCTAssertEqual(written["streakGoal"] as? NSDictionary, goal)
+            try XCTAssertEqual(try firstSessionFields(written)["tags"] as? NSArray, tags)
+        }
+        var snapshot = try store.recoverFromBackup(backup)
+        try assertKept(try Data(contentsOf: store.fileURL))
+        try XCTAssertEqual(snapshot.notes, ["f01": "Paths"])
+        try XCTAssertEqual(snapshot.dailyFocus, "Graphs")
+        try XCTAssertEqual(snapshot.sessions.map(\.reflection), ["BFS"])
+        try XCTAssertEqual(snapshot.sessions.map(\.moduleID), ["f01"])
+        snapshot.completedModuleIDs.insert("f02")
+        try store.save(snapshot)
+        try assertKept(try Data(contentsOf: store.fileURL))
+        try XCTAssertEqual(try store.load(), snapshot)
+        try assertKept(try store.exportData(snapshot))
+    }
+
+    func testNumbersFromOtherForgeVersionsAreKeptExactlyOrLeftOut() throws {
+        // A field this build doesn't model may hold a number that Int and Double can't hold
+        // exactly, such as one past Int64 or a long fraction; it is written back as read. A
+        // number no Swift type can hold, such as 1e999, is left out, as builds before this one
+        // left out every such field, and never stops a progress file or backup from loading.
+        let backup = Data("""
+        {"version": 1, "completedModuleIDs": ["f01"], "notes": {}, "dailyFocus": "", "streakGoal": 30, "huge": 1e999,
+         "count": 18446744073709551615, "ratio": 0.12345678901234567890123,
+         "sessions": [{"id": "48777513-9059-44AB-B5AF-B5BC3EC7D266", "date": "2026-10-29T18:20:00Z", "minutes": 25,
+                       "reflection": "BFS", "tags": ["bfs"], "weight": -1e999, "score": 1.0000000000000001}]}
+        """.utf8)
+        func assertWritten(_ data: Data) throws {
+            let text = String(decoding: data, as: UTF8.self)
+            for number in ["18446744073709551615", "0.12345678901234567890123", "1.0000000000000001"] {
+                try XCTAssertTrue(text.contains(number))
+            }
+            let written = try jsonFields(data)
+            try XCTAssertEqual(written["streakGoal"] as? Int, 30)
+            try XCTAssertEqual(try firstSessionFields(written)["tags"] as? [String], ["bfs"])
+            try XCTAssertTrue(written["huge"] == nil)
+            try XCTAssertTrue(try firstSessionFields(written)["weight"] == nil)
+        }
+        let chosen = try store.importData(backup)
+        try XCTAssertEqual(chosen.sessions.map(\.reflection), ["BFS"])
+        try assertWritten(try store.exportData(chosen))
+        try XCTAssertEqual(try store.recoverFromBackup(backup), chosen)
+        try assertWritten(try Data(contentsOf: store.fileURL))
+        // The same fields in the progress file itself, such as a newer build saved there.
+        try backup.write(to: store.fileURL)
+        let restarted = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        var loaded = try restarted.load()
+        loaded.completedModuleIDs.insert("f02")
+        try restarted.save(loaded)
+        try assertWritten(try Data(contentsOf: store.fileURL))
+        try XCTAssertEqual(try restarted.load(), loaded)
     }
 
     func testSessionDurationAndDuplicateIDsAreValidated() throws {
@@ -397,6 +490,27 @@ private final class CoreCases {
         }
     }
 
+    func testSessionLimitWithLongReflectionsSavesAndRestores() throws {
+        // The progress file and its backups share one size limit. It must hold the
+        // 20,000-session limit with 2,000-byte reflections and every note at its limit.
+        let ids = try Curriculum.loadBundled().modules.map(\.id)
+        let reflection = String(repeating: "r", count: 2_000)
+        let start = Date(timeIntervalSince1970: 1_793_275_200)
+        var snapshot = ProgressSnapshot(completedModuleIDs: Set(ids),
+                                        dailyFocus: String(repeating: "f", count: ProgressFileStore.maximumFocusBytes))
+        for id in ids { snapshot.notes[id] = String(repeating: "n", count: ProgressFileStore.maximumTextBytes) }
+        snapshot.sessions = (0..<20_000).map { index in
+            StudySession(date: start.addingTimeInterval(Double(index) * 60), minutes: 25,
+                         reflection: reflection, moduleID: ids[index % ids.count])
+        }
+        try store.save(snapshot)
+        let restarted = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        try XCTAssertEqual(try restarted.load(), snapshot)
+        try XCTAssertEqual(try restarted.recoverFromBackup(try restarted.exportData(snapshot)), snapshot)
+        snapshot.sessions.append(StudySession(minutes: 25, reflection: "One more"))
+        try XCTAssertThrowsError(try store.validate(snapshot)) { try XCTAssertEqual($0 as? ProgressError, .invalidSession) }
+    }
+
     func testInvalidSavePreservesPreviousSnapshotBytes() throws {
         let original = sampleSnapshot()
         try store.save(original)
@@ -419,6 +533,61 @@ private final class CoreCases {
         try XCTAssertEqual(try Data(contentsOf: store.fileURL), damaged)
     }
 
+    func testSaveRechecksFilesChangedOutsideTheStore() throws {
+        // save() skips decoding bytes this store loaded or wrote itself. A file damaged
+        // after that, whether the store last saved or only loaded it, must be preserved.
+        try store.save(sampleSnapshot())
+        try store.save(sampleSnapshot())
+        let damaged = Data("damaged after the last save".utf8)
+        try damaged.write(to: store.fileURL)
+        try XCTAssertThrowsError(try store.save(sampleSnapshot())) {
+            try XCTAssertEqual($0 as? ProgressError, .damagedExistingFile)
+        }
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), damaged)
+        let reader = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        try store.exportData(sampleSnapshot()).write(to: store.fileURL)
+        _ = try reader.load()
+        try damaged.write(to: store.fileURL)
+        try XCTAssertThrowsError(try reader.save(sampleSnapshot())) {
+            try XCTAssertEqual($0 as? ProgressError, .damagedExistingFile)
+        }
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), damaged)
+    }
+
+    func testOlderProgressNeverReplacesProgressSavedElsewhere() throws {
+        // Two Forge windows or apps can share one progress file. A store holding older
+        // progress must not replace what the other saved: a plain save is refused, and
+        // a change is applied to the newer progress instead.
+        let older = sampleSnapshot()
+        try store.save(older)
+        let other = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        var newer = try other.load()
+        newer.sessions.append(StudySession(date: Date(timeIntervalSince1970: 1_793_361_600), minutes: 90,
+                                           reflection: "Saved in another window"))
+        try other.save(newer)
+        let newerBytes = try Data(contentsOf: store.fileURL)
+        var stale = older
+        stale.completedModuleIDs.insert("f02")
+        try XCTAssertThrowsError(try store.save(stale)) { try XCTAssertEqual($0 as? ProgressError, .changedElsewhere) }
+        try XCTAssertEqual(try Data(contentsOf: store.fileURL), newerBytes)
+        try XCTAssertEqual(try store.newerSavedProgress(), newer)
+        var expected = newer
+        expected.completedModuleIDs.insert("f02")
+        try XCTAssertEqual(try store.save(older) { $0.completedModuleIDs.insert("f02") }, expected)
+        try XCTAssertEqual(try ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs).load(), expected)
+        try XCTAssertTrue(try store.newerSavedProgress() == nil)
+        // The other store now holds older progress, and its change also lands on top.
+        let merged = try other.save(newer) { $0.dailyFocus = "Both kept" }
+        try XCTAssertEqual(merged.completedModuleIDs, ["f01", "f02"])
+        try XCTAssertEqual(merged.sessions.count, 2)
+        // A store that found no file keeps one another store created in the meantime.
+        let laterURL = directory.appendingPathComponent("later/progress.json")
+        let empty = ProgressFileStore(fileURL: laterURL, allowedModuleIDs: store.allowedModuleIDs)
+        try XCTAssertEqual(try empty.load(), ProgressSnapshot())
+        try ProgressFileStore(fileURL: laterURL, allowedModuleIDs: store.allowedModuleIDs).save(older)
+        try XCTAssertEqual(try empty.save(ProgressSnapshot()) { $0.dailyFocus = "Kept" }.sessions, older.sessions)
+    }
+
     func testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup() throws {
         try FileManager.default.createDirectory(at: store.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let damaged = Data("damaged original".utf8)
@@ -431,6 +600,26 @@ private final class CoreCases {
             .filter { $0.lastPathComponent.hasPrefix("progress-before-restore-") }
         try XCTAssertEqual(preserved.count, 1)
         try XCTAssertEqual(try Data(contentsOf: try XCTUnwrap(preserved.first)), damaged)
+    }
+
+    func testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile() throws {
+        let backup = try store.exportData(sampleSnapshot())
+        // Nothing is saved yet, so there is nothing to keep and no copy to report.
+        try XCTAssertTrue(try store.restoreBackup(backup).recoveryCopy == nil)
+        try XCTAssertEqual(store.recoveryCopies(), [])
+        // Each restore over saved progress keeps that file under a dated, distinct name.
+        var newer = sampleSnapshot()
+        newer.dailyFocus = "Newer work"
+        try store.save(newer)
+        let previous = try Data(contentsOf: store.fileURL)
+        let first = try XCTUnwrap(try store.restoreBackup(backup).recoveryCopy)
+        let second = try XCTUnwrap(try store.restoreBackup(backup).recoveryCopy)
+        try XCTAssertEqual(Set(store.recoveryCopies()), [first, second])
+        try XCTAssertEqual(try Data(contentsOf: first), previous)
+        for copy in [first, second] {
+            try XCTAssertTrue(copy.lastPathComponent.range(of: #"^progress-before-restore-\d{4}-\d{2}-\d{2}-\d{6}(-\d+)?\.json$"#,
+                                                           options: .regularExpression) != nil)
+        }
     }
 
     func testInvalidRecoveryDoesNotTouchExistingData() throws {
@@ -532,6 +721,14 @@ private final class CoreCases {
         try XCTAssertEqual(snapshot.filteredSessions().map(\.id), [next.id, independent.id, current.id, older.id])
         try XCTAssertEqual(snapshot.sessions, [current, older, next, independent])
         try XCTAssertEqual(snapshot.totalMinutes, 100)
+    }
+
+    private func jsonFields(_ data: Data) throws -> [String: Any] {
+        try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
+    private func firstSessionFields(_ fields: [String: Any]) throws -> [String: Any] {
+        try XCTUnwrap((fields["sessions"] as? [[String: Any]])?.first)
     }
 
     private func sampleSnapshot() -> ProgressSnapshot {

@@ -16,14 +16,24 @@ enum NativeChecks {
     /// Lays out the journal without a window and reports whether its focus
     /// field accepts input, or nil when the field is missing.
     static func focusFieldEnabled(_ model: AppModel) -> Bool? {
-        let host = NSHostingView(rootView: JournalView().environmentObject(model))
+        focusField(in: host(JournalView(), for: model))?.isEnabled
+    }
+    /// Lays out a screen without a window, as a Forge window shows it.
+    static func host(_ screen: some View, for model: AppModel) -> NSView {
+        let host = NSHostingView(rootView: screen.environmentObject(model))
         host.frame = NSRect(x: 0, y: 0, width: 1_100, height: 900)
         host.layoutSubtreeIfNeeded()
-        func focusField(in view: NSView) -> NSTextField? {
-            if let field = view as? NSTextField, field.placeholderString?.hasPrefix("For example: implement BFS") == true { return field }
-            return view.subviews.lazy.compactMap(focusField).first
-        }
-        return focusField(in: host)?.isEnabled
+        return host
+    }
+    /// The journal's focus field, or nil when it is missing.
+    static func focusField(in view: NSView) -> NSTextField? {
+        if let field = view as? NSTextField, field.placeholderString?.hasPrefix("For example: implement BFS") == true { return field }
+        return view.subviews.lazy.compactMap(focusField).first
+    }
+    /// The pixels of a primary-style button, as the app draws it in dark mode.
+    static func primaryButtonPixels(disabled: Bool) -> Data? {
+        let button = Button("Save study session") {}.buttonStyle(PrimaryButtonStyle()).disabled(disabled)
+        return ImageRenderer(content: button.environment(\.colorScheme, .dark)).cgImage?.dataProvider?.data as Data?
     }
     static func run() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Forge-check-\(UUID().uuidString)")
@@ -49,21 +59,157 @@ enum NativeChecks {
         try require(model.noteDrafts[lesson.id]?.count == 20_001, "Failed save discarded the draft")
         print("PASS failed save retains draft and preserves disk")
 
+        // One note over the limit must not block a backup of saved progress or hold back
+        // the other drafts, and the learner is told which lesson's draft was left out.
         let store = ProgressFileStore(fileURL: url, allowedModuleIDs: catalog.moduleIDs)
-        let restored = ProgressSnapshot(notes: [lesson.id: "Restored note"], dailyFocus: "Test the boundary")
+        let other = catalog.modules[1]
+        model.noteDrafts[other.id] = "Saved with the backup"
+        guard let backup = try model.backupData() else { throw Failure("An oversized draft blocked the backup") }
+        try require(model.message == nil, "An oversized draft raised a save error")
+        let backedUp = try store.importData(backup)
+        try require(backedUp == model.progress && backedUp.notes[other.id] == "Saved with the backup", "Backup left out saved progress")
+        try require(model.noteDrafts[lesson.id]?.count == 20_001, "Backup discarded the oversized draft")
+        try require(model.backupOmissionNote?.contains("“\(lesson.title)”") == true && model.backupOmissionNote?.contains(other.title) == false,
+                    "Backup did not name the unsaved draft")
+        print("PASS an oversized note draft doesn't block a backup of saved progress")
+
+        // Restore keeps text the learner hasn't saved, which the recovery copy can't
+        // hold, and moves every other draft to the restored progress so that no later
+        // save writes stale text over it.
+        model.sessionReflectionDraft = "Unsaved reflection"
+        try require(model.restoreConfirmationText.contains("Unsaved drafts stay"), "Restore didn't say unsaved drafts are kept")
+        let restored = ProgressSnapshot(notes: [lesson.id: "Restored note", other.id: "Restored second note"], dailyFocus: "Test the boundary")
         model.backupCandidate = try store.exportData(restored)
         model.confirmRestore()
-        try require(model.noteDrafts[lesson.id] == "Restored note", "Restore left stale editor text")
+        try require(model.noteDrafts[other.id] == "Restored second note", "Restore left stale editor text")
         try require(model.focusDraft == "Test the boundary", "Restore left stale focus text")
-        try require(model.flushNotes(), "Restored draft could not flush")
+        try require(model.noteDrafts[lesson.id]?.count == 20_001 && model.sessionReflectionDraft == "Unsaved reflection",
+                    "Restore discarded unsaved drafts")
+        model.focusDraft = "Unsaved focus"
+        model.backupCandidate = try store.exportData(restored)
+        model.confirmRestore()
+        try require(model.focusDraft == "Unsaved focus", "Restore discarded an unsaved focus")
+        try require(!model.flushNotes(), "Oversized draft unexpectedly saved")
         let disk = try store.load()
         try require(disk.notes == restored.notes, "Draft flush overwrote restored notes")
-        print("PASS restore replaces shared drafts before further saves")
+        model.noteDrafts[lesson.id] = "Restored note"
+        model.focusDraft = "Test the boundary"
+        model.sessionReflectionDraft = ""
+        print("PASS restore keeps unsaved drafts and replaces the others before further saves")
         try require(LabBrowser.permitsFrame(URL(string: "about:srcdoc")!, isMainFrame: false), "Sandbox runner child frame was blocked")
         try require(!LabBrowser.permitsFrame(URL(string: "about:srcdoc")!, isMainFrame: true), "Top-level srcdoc was allowed")
         try require(!LabBrowser.permitsFrame(URL(string: "https://example.com/")!, isMainFrame: false), "Untrusted embedded navigation was allowed")
         try require(!LabBrowser.permitsFrame(URL(string: "javascript:alert(1)")!, isMainFrame: true), "Script navigation was allowed")
         print("PASS sandbox runner frame allowed with external navigation blocked")
+
+        // The lab page keeps some work only in memory, such as a running focus timer. Opening
+        // the section already showing must not reload it, and a link meant for a new window
+        // must not replace it. A page that stopped or never loaded must still load.
+        let shown = URL(string: "\(LabBrowser.home)#git")!
+        try require(!LabBrowser.needsLoad(shown, shown: shown, pageIsBroken: false), "Opening the section already showing reloaded the lab page")
+        try require(LabBrowser.needsLoad(URL(string: "\(LabBrowser.home)#practice")!, shown: shown, pageIsBroken: false), "Another lab section did not open")
+        try require(LabBrowser.needsLoad(shown, shown: shown, pageIsBroken: true), "A stopped lab page was not loaded again")
+        try require(LabBrowser.needsLoad(shown, shown: nil, pageIsBroken: false), "A lab page that didn't load was not retried")
+        try require(LabBrowser.opensInBrowser(newWindow: URL(string: "\(LabBrowser.home)curriculum-guide.html")!), "A new-window link to the labs site replaced the lab page")
+        try require(LabBrowser.opensInBrowser(newWindow: URL(string: "https://docs.python.org/3/")!), "A new-window link to another site stayed in the app")
+        try require(!LabBrowser.opensInBrowser(newWindow: URL(string: "javascript:alert(1)")!), "A script new-window request was opened")
+        print("PASS labs keep the page that is showing")
+
+        // WebKit stops a load with "Frame load interrupted" (WebKitErrorDomain 102) when the
+        // app turns the response into a download or opens a redirect in the browser. Neither
+        // is a failure, so neither may raise "Forge labs could not load".
+        try require(!LabBrowser.reportsFailure(NSError(domain: "WebKitErrorDomain", code: 102)), "A download or browser redirect was reported as a failed load")
+        try require(!LabBrowser.reportsFailure(NSError(domain: NSURLErrorDomain, code: NSURLErrorCancelled)), "A cancelled load was reported as a failure")
+        try require(LabBrowser.reportsFailure(NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet)), "An offline load was not reported")
+        try require(LabBrowser.reportsFailure(NSError(domain: "WebKitErrorDomain", code: 101)), "A page WebKit can't show was not reported")
+        print("PASS labs report only loads that failed")
+
+        let fresh = AppModel(progressURL: directory.appendingPathComponent("fresh/progress.json"), refreshCatalogOnLaunch: false)
+        try require(!fresh.restoreConfirmationText.contains("recovery copy"), "Restore promised a copy with nothing to copy")
+        fresh.backupCandidate = try store.exportData(restored)
+        fresh.confirmRestore()
+        try require(fresh.message == "Backup restored." && fresh.recoveryCopies.isEmpty, "Restore without saved data reported a copy")
+        try require(model.restoreConfirmationText.contains("recovery copy"), "Restore over saved data did not promise a copy")
+        let replaced = try Data(contentsOf: url)
+        let earlierCopies = Set(model.recoveryCopies)
+        model.backupCandidate = try store.exportData(ProgressSnapshot(dailyFocus: "Older backup"))
+        model.confirmRestore()
+        let newCopies = Set(model.recoveryCopies).subtracting(earlierCopies)
+        guard newCopies.count == 1, let copy = newCopies.first else { throw Failure("Restore did not list its recovery copy") }
+        try require(model.message?.contains(copy.lastPathComponent) == true, "Restore message did not name its recovery copy")
+        let copied = try Data(contentsOf: copy)
+        try require(copied == replaced, "Recovery copy does not hold the replaced progress")
+        print("PASS restore names its recovery copy and promises one only when it is made")
+
+        let otherURL = directory.appendingPathComponent("other-version/progress.json")
+        try FileManager.default.createDirectory(at: otherURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("""
+        {"version": 1, "completedModuleIDs": ["\(lesson.id)", "retired-lesson"], "notes": {"retired-lesson": "Still mine"},
+         "dailyFocus": "", "streakGoal": 30, "sessions": [{"id": "6F9619FF-8B86-D011-B42D-00C04FC964FF",
+         "date": "2026-11-01T10:00:00Z", "minutes": 25, "reflection": "Old lesson", "moduleID": "retired-lesson", "tags": ["bfs"]}]}
+        """.utf8).write(to: otherURL)
+        let upgraded = AppModel(progressURL: otherURL, refreshCatalogOnLaunch: false)
+        try require(!upgraded.readOnly, "Progress naming a retired lesson opened read-only")
+        try require(upgraded.reviewedModuleCount == 1, "A retired lesson counted as reviewed")
+        upgraded.markComplete(catalog.modules[1].id, completed: true)
+        let kept = AppModel(progressURL: otherURL, refreshCatalogOnLaunch: false).progress
+        try require(kept.completedModuleIDs == [lesson.id, catalog.modules[1].id, "retired-lesson"], "Saving lost a retired lesson")
+        try require(kept.notes["retired-lesson"] == "Still mine" && kept.sessions.first?.moduleID == "retired-lesson", "Saving lost retired lesson data")
+        let written = try String(contentsOf: otherURL, encoding: .utf8)
+        try require(written.contains("\"streakGoal\"") && written.contains("\"tags\""), "Saving dropped fields from another Forge version")
+        print("PASS progress from another curriculum or Forge version stays writable and intact")
+
+        // Two Forge windows or copies of the app can share one progress file. A window
+        // that loaded older progress must add its changes to what the other saved, and
+        // must not write its older drafts back over newer notes.
+        let sharedURL = directory.appendingPathComponent("two-windows/progress.json")
+        let first = AppModel(progressURL: sharedURL, refreshCatalogOnLaunch: false)
+        first.noteDrafts[lesson.id] = "First note"
+        try require(first.flushNotes(), "First window could not save its note")
+        let behind = AppModel(progressURL: sharedURL, refreshCatalogOnLaunch: false)
+        first.noteDrafts[lesson.id] = "Newer note"
+        try require(first.flushNotes() && first.update { $0.sessions.append(StudySession(minutes: 90, reflection: "BFS proof")) },
+                    "First window could not save newer work")
+        behind.noteDrafts[other.id] = "Typed in the window that fell behind"
+        try require(behind.flushNotes(), "The window that fell behind could not save its note")
+        behind.markComplete(other.id, completed: true)
+        let relaunched = AppModel(progressURL: sharedURL, refreshCatalogOnLaunch: false).progress
+        try require(relaunched.sessions.map(\.reflection) == ["BFS proof"] && relaunched.completedModuleIDs == [other.id]
+                    && relaunched.notes == [lesson.id: "Newer note", other.id: "Typed in the window that fell behind"],
+                    "A window with older progress erased newer work")
+        try require(behind.message == nil && behind.progress == relaunched && behind.noteDrafts[lesson.id] == "Newer note",
+                    "The window that fell behind kept showing older progress")
+        try require(first.update { $0.sessions.append(StudySession(minutes: 30, reflection: "Graph quiz")) }, "First window could not save again")
+        guard let behindBackup = try behind.backupData() else { throw Failure("Backup was blocked") }
+        let behindSessions = try store.importData(behindBackup).sessions
+        try require(behindSessions.count == 2, "A backup from the window that fell behind left out newer work")
+        print("PASS a window with older progress adds its changes to newer saved progress")
+
+        // A copy that fell behind shows the other copy's newer note and focus as soon as the
+        // learner switches to it, so an edit there builds on that text instead of replacing it.
+        let switchURL = directory.appendingPathComponent("switching/progress.json")
+        let copyA = AppModel(progressURL: switchURL, refreshCatalogOnLaunch: false)
+        copyA.noteDrafts[lesson.id] = "First version"
+        try require(copyA.flushNotes(), "The first copy could not save its note")
+        let copyB = AppModel(progressURL: switchURL, refreshCatalogOnLaunch: false)
+        copyA.noteDrafts[lesson.id] = "Rewritten in the other copy"
+        copyA.focusDraft = "Focus saved in the other copy"
+        try require(copyA.flushNotes() && copyA.update { $0.dailyFocus = copyA.focusDraft }, "The first copy could not save newer text")
+        copyB.noteDrafts[other.id] = "Unsaved text typed in this copy"
+        let lifecycle = ForgeLifecycle()
+        lifecycle.model = copyB
+        lifecycle.applicationDidBecomeActive(Notification(name: NSApplication.didBecomeActiveNotification))
+        try require(copyB.noteDrafts[lesson.id] == "Rewritten in the other copy" && copyB.focusDraft == "Focus saved in the other copy",
+                    "A copy that fell behind kept showing older text after the learner switched to it")
+        try require(copyB.noteDrafts[other.id] == "Unsaved text typed in this copy" && copyB.message == nil,
+                    "Switching to a copy discarded its unsaved text")
+        copyB.noteDrafts[lesson.id]? += "\nOne line typed in this copy"
+        try require(copyB.flushNotes(), "The copy that fell behind could not save its notes")
+        let switched = AppModel(progressURL: switchURL, refreshCatalogOnLaunch: false).progress
+        try require(switched.notes == [lesson.id: "Rewritten in the other copy\nOne line typed in this copy", other.id: "Unsaved text typed in this copy"]
+                    && switched.dailyFocus == "Focus saved in the other copy",
+                    "An edit in a copy that fell behind replaced the other copy's newer text")
+        print("PASS a copy that fell behind shows newer saved progress when the learner switches to it")
 
         // Lessons can be reviewed in any order. The overview map must mark the
         // chapters actually reviewed, and its current chapter must hold Up Next.
@@ -99,7 +245,94 @@ enum NativeChecks {
         try require(focusFieldEnabled(model) == true, "Writable journal focus field is missing or disabled")
         try require(focusFieldEnabled(damaged) == false, "Read-only journal focus field accepts text it cannot save")
         print("PASS read-only journal focus field refuses unsaveable text")
-        print("6/6 native regression checks passed")
+
+        // Save buttons stay disabled until their text can be saved, such as a session with
+        // no reflection yet. A disabled one must not look like the bright red button that saves.
+        guard let enabledButton = primaryButtonPixels(disabled: false), let disabledButton = primaryButtonPixels(disabled: true)
+        else { throw Failure("Could not draw a primary button") }
+        try require(enabledButton != disabledButton, "A disabled save button looks the same as one that saves")
+        print("PASS disabled save buttons look disabled")
+
+        // Session lengths step by 5 minutes down to a 1-minute floor, which is off that grid,
+        // so a press up from it must land on 5 again, not on 6, 11, 16 and so on.
+        var minutes = 25, lengths: [Int] = []
+        while let shorter = JournalView.sessionMinutes(after: minutes, longer: false) { minutes = shorter; lengths.append(minutes) }
+        try require(lengths == [20, 15, 10, 5, 1], "Shortening a 25-minute session gave \(lengths)")
+        lengths = []
+        while lengths.count < 6, let longer = JournalView.sessionMinutes(after: minutes, longer: true) { minutes = longer; lengths.append(minutes) }
+        try require(lengths == [5, 10, 15, 20, 25, 30], "Lengthening a 1-minute session gave \(lengths)")
+        try require(JournalView.sessionMinutes(after: 26, longer: true) == 30 && JournalView.sessionMinutes(after: 26, longer: false) == 25,
+                    "An off-step session length didn't return to the 5-minute steps")
+        try require(JournalView.sessionMinutes(after: 715, longer: true) == 720 && JournalView.sessionMinutes(after: 720, longer: true) == nil,
+                    "Session length passed the 720-minute limit")
+        print("PASS session lengths stay on 5-minute steps")
+
+        // Every keystroke in a journal editor redraws the journal, and an overview in another
+        // window, so the redraws must reuse the daily totals and the matching sessions, which
+        // only new saved progress or another search replaces.
+        let journalURL = directory.appendingPathComponent("journal/progress.json")
+        let now = Date()
+        let older = StudySession(date: now.addingTimeInterval(-3 * 86_400), minutes: 40, reflection: "Earlier", moduleID: other.id)
+        let newer = StudySession(date: now, minutes: 25, reflection: "Today")
+        try ProgressFileStore(fileURL: journalURL, allowedModuleIDs: catalog.moduleIDs).save(ProgressSnapshot(sessions: [newer, older]))
+        let journal = AppModel(progressURL: journalURL, refreshCatalogOnLaunch: false)
+        let journalView = host(JournalView(), for: journal)
+        let journalComputed = journal.historyComputations
+        try require(journalComputed >= 2, "The journal doesn't read its matching sessions and daily totals from the model")
+        let overview = host(DashboardView(), for: journal)
+        let computed = journal.historyComputations
+        try require(computed > journalComputed, "The overview doesn't read today's practice from the model")
+        guard let typed = focusField(in: journalView) else { throw Failure("Journal focus field is missing") }
+        for text in ["B", "BF", "BFS"] {
+            journal.focusDraft = text
+            journal.sessionReflectionDraft += text
+            // The field shows the draft once the journal has redrawn, as the app's run loop would.
+            for _ in 0..<50 where typed.stringValue != text {
+                journalView.layoutSubtreeIfNeeded()
+                if typed.stringValue != text { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+            }
+            overview.layoutSubtreeIfNeeded()
+            try require(typed.stringValue == text, "The journal didn't redraw for typed text")
+        }
+        try require(journal.historyComputations == computed, "Typing in the journal recomputed the whole history")
+        // Saved dates keep whole seconds, so sessions are compared by ID.
+        func found(query: String = "", moduleID: String? = nil, since: Date? = nil, before: Date? = nil) -> [UUID] {
+            journal.matchingSessions(query: query, moduleID: moduleID, since: since, before: before).sessions.map(\.id)
+        }
+        // With no search typed, the journal lists every session, newest first.
+        let all = [newer.id, older.id]
+        try require(found() == all && journal.matchingSessions().minutes == 65, "Recent sessions are not newest first")
+        try require(journal.historyComputations == computed, "The journal's own search was computed again")
+        // Another search is another list, found as the store finds it: by reflection text, by
+        // the title of the session's lesson, by lesson, and by date. Each is asked for while the
+        // journal's own search is kept, so no search may be answered with another's sessions.
+        let titles = Dictionary(uniqueKeysWithValues: catalog.modules.map { ($0.id, $0.title) })
+        let today = Calendar.current.startOfDay(for: now)
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)
+        try require(found(query: "earlier") == [older.id] && journal.matchingSessions(query: "earlier").minutes == 40,
+                    "A search by reflection found other sessions")
+        try require(journal.historyComputations == computed + 1, "A search was not computed once and then reused")
+        try require(found() == all && found(query: other.title) == [older.id], "A search by lesson title missed its session")
+        try require(found() == all && found(moduleID: "") == [newer.id] && found() == all && found(moduleID: other.id) == [older.id],
+                    "The lesson filter showed another lesson's sessions")
+        try require(found() == all && found(since: today, before: tomorrow) == [newer.id]
+                    && journal.matchingSessions(since: today, before: tomorrow).minutes == 25, "The date range showed sessions outside it")
+        // More searches than the model keeps at once still give each search its own sessions.
+        for query in ["a", "b", "c", "d", "e", "f"] {
+            try require(found() == all && journal.matchingSessions(query: query).sessions == journal.progress.filteredSessions(query: query, moduleTitles: titles),
+                        "A search for “\(query)” showed another search's sessions")
+        }
+        try require(found() == all && found(query: "earlier") == [older.id], "An earlier search came back with other sessions")
+        try require(journal.update { $0.sessions.append(StudySession(date: now.addingTimeInterval(60), minutes: 5, reflection: "Later")) },
+                    "Journal could not save a session")
+        try require(journal.matchingSessions().sessions.map(\.reflection) == ["Later", "Today", "Earlier"] && journal.matchingSessions().minutes == 70,
+                    "Recent sessions missed a new session")
+        try require(found(query: "earlier") == [older.id] && journal.matchingSessions(query: "later").minutes == 5, "A search missed a new session")
+        let week = (-6...0).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: now) }
+        try require(journal.minutes(on: week) == journal.progress.minutes(on: week) && journal.minutes(on: [now]) == journal.progress.minutes(on: [now]),
+                    "Daily totals missed a new session")
+        print("PASS journal typing reuses history totals that new sessions replace")
+        print("16/16 native regression checks passed")
     }
 }
 

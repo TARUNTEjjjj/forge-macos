@@ -88,7 +88,7 @@ final class LabWorkspace: NSObject, NSToolbarDelegate {
     }
     @objc private func activateItem(_ sender: NSToolbarItem) {
         switch sender.itemIdentifier.rawValue {
-        case "refresh": browser.reloadOrRetry()
+        case "refresh": browser.requestReload()
         case "external": NSWorkspace.shared.open(LabBrowser.home)
         default: browser.open(sender.itemIdentifier.rawValue)
         }
@@ -104,6 +104,11 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
     private var downloads: [WKDownload] = []
     private var destinations: [ObjectIdentifier: (temporary: URL, chosen: URL)] = [:]
     private var lastRequest: URLRequest?
+    /// Set when the page shown can't be kept, because its web content process stopped or its
+    /// load failed after it began to show. Cleared when a new page commits.
+    private var pageIsBroken = false
+    /// The toolbar Reload that is waiting for the page's answer. A later Reload replaces it.
+    private var pendingReload: UUID?
 
     override init() {
         let configuration = WKWebViewConfiguration()
@@ -115,13 +120,24 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
         webView.allowsBackForwardNavigationGestures = true
     }
 
+    /// The site keeps its section in the URL fragment, so going to another section is a
+    /// same-document navigation that keeps the lab's unsaved in-memory work, such as a running
+    /// focus timer. Loading the URL already shown would make WebKit reload the page and lose
+    /// that work, so a section that is already showing is left as it is.
     func open(_ fragment: String) {
         error = nil
         var url = URLComponents(url: Self.home, resolvingAgainstBaseURL: false)!
         url.fragment = fragment
         let request = URLRequest(url: url.url!)
         lastRequest = request
+        guard Self.needsLoad(request.url!, shown: webView.url, pageIsBroken: pageIsBroken) else { return }
         webView.load(request)
+    }
+
+    /// Whether showing `target` needs a load: it does unless a working page already shows it.
+    /// `shown` is nil when nothing has loaded or the last load failed before it showed.
+    static func needsLoad(_ target: URL, shown: URL?, pageIsBroken: Bool) -> Bool {
+        pageIsBroken || shown != target
     }
 
     /// A first load that fails leaves no page for reload(), so load the last request again.
@@ -130,30 +146,91 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
         if webView.backForwardList.currentItem == nil, let lastRequest { webView.load(lastRequest) } else { webView.reload() }
     }
 
+    /// The toolbar's Reload. A page guards unsaved work with a beforeunload handler, which WebKit
+    /// runs only for apps that implement a private panel method, and Mac App Store apps may use
+    /// public API only. So the page is asked first, as a browser would ask it, and if it objects,
+    /// for example because the project workshop holds edits that browser storage couldn't hold,
+    /// the learner decides.
+    func requestReload() {
+        guard !pageIsBroken, webView.backForwardList.currentItem != nil else { reloadOrRetry(); return }
+        let request = UUID()
+        pendingReload = request
+        webView.evaluateJavaScript(Self.unsavedWorkCheck) { [weak self] result, _ in
+            self?.finishReload(request, pageObjects: result as? Bool == true)
+        }
+        // A page too busy to answer can't be asked, and reloading is how the learner recovers it.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            MainActor.assumeIsolated { self?.finishReload(request, pageObjects: false) }
+        }
+    }
+
+    /// Dispatches a cancelable beforeunload event in the page. True when a handler cancels it,
+    /// which is how a page asks to keep unsaved work.
+    static let unsavedWorkCheck = "!window.dispatchEvent(new Event('beforeunload', { cancelable: true }))"
+
+    /// Reloads once the page answered, or didn't answer in time, unless a later Reload took over.
+    private func finishReload(_ request: UUID, pageObjects: Bool) {
+        guard pendingReload == request else { return }
+        pendingReload = nil
+        if !pageObjects || confirmReloadDiscardingWork() { reloadOrRetry() }
+    }
+
+    private func confirmReloadDiscardingWork() -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Reload Forge labs?"
+        alert.informativeText = "The lab page has changes that may not be saved, such as project edits that browser storage couldn't hold. Reloading discards them."
+        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Reload")
+        return alert.runModal() == .alertSecondButtonReturn
+    }
+
+    /// The labs window is open, possibly minimized. A closed one keeps its page for next time.
+    private var windowIsOpen: Bool { webView.window.map { $0.isVisible || $0.isMiniaturized } ?? false }
+
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { loading = true; error = nil }
+    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) { pageIsBroken = false }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { loading = false }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError failure: Error) { fail(failure) }
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError failure: Error) { fail(failure) }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError failure: Error) {
+        // The page had begun to show, so what is left of it shouldn't be kept by open().
+        if Self.reportsFailure(failure) { pageIsBroken = true }
+        fail(failure)
+    }
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         loading = false
         error = "The web content process stopped."
+        pageIsBroken = true
         // A closed labs window loads a fresh page when it is shown again, so only alert while it is open.
-        guard let window = webView.window, window.isVisible || window.isMiniaturized else { return }
+        guard windowIsOpen else { return }
         let alert = NSAlert()
         alert.messageText = "Forge labs stopped"
         alert.informativeText = "The lab page stopped unexpectedly, possibly because it ran out of memory. Work not yet saved in the lab may be lost. Choose Reload to continue, or use Reload in the labs toolbar later."
         alert.addButton(withTitle: "Reload")
         alert.addButton(withTitle: "Not now")
-        if alert.runModal() == .alertFirstButtonReturn { webView.reload() }
+        // A page that never committed leaves reload() nothing to restore.
+        if alert.runModal() == .alertFirstButtonReturn { reloadOrRetry() }
     }
     private func fail(_ failure: Error) {
-        if (failure as NSError).code == NSURLErrorCancelled { return }
+        guard Self.reportsFailure(failure) else { return }
         loading = false
         error = failure.localizedDescription
+        // Like the crash alert, only alert while the labs window is open. Showing it again
+        // retries a page that didn't load.
+        guard windowIsOpen else { return }
         let alert = NSAlert()
         alert.messageText = "Forge labs could not load"
         alert.informativeText = failure.localizedDescription + " You can keep reading the native lessons offline, or use Reload in the labs toolbar to try again."
         alert.runModal()
+    }
+
+    /// Whether a navigation error means the page didn't load. A cancelled load didn't fail, and
+    /// neither did one that WebKit stopped because this app's policy turned the response into a
+    /// download or opened a redirect in the browser. WebKit reports those as "Frame load
+    /// interrupted", code 102 in WebKitErrorDomain, whose deprecated constants aren't used here.
+    static func reportsFailure(_ failure: Error) -> Bool {
+        let error = failure as NSError
+        if error.code == NSURLErrorCancelled { return false }
+        return !(error.domain == "WebKitErrorDomain" && error.code == 102)
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -224,11 +301,15 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
         }
     }
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        if let url = action.request.url, url.scheme == "https" {
-            if url.host == Self.home.host { webView.load(action.request) } else { NSWorkspace.shared.open(url) }
-        }
+        if let url = action.request.url, Self.opensInBrowser(newWindow: url) { NSWorkspace.shared.open(url) }
         return nil
     }
+
+    /// Whether a link the site opens in a new window, such as "Open complete field guide", goes to
+    /// the browser. The labs window holds one page, and loading the link there would replace the
+    /// running lab and its unsaved work with no way back, so it opens in the browser, as a new tab would.
+    static func opensInBrowser(newWindow url: URL) -> Bool { url.scheme == "https" }
+
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let alert = NSAlert(); alert.messageText = "Forge labs"; alert.informativeText = message; alert.runModal(); completionHandler()
     }
