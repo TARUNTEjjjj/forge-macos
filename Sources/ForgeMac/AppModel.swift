@@ -17,6 +17,11 @@ enum Destination: String, CaseIterable, Identifiable {
     }
 }
 
+/// How the overview map draws one chapter.
+enum ChapterStatus: String {
+    case upcoming, current, complete
+}
+
 @MainActor
 final class AppModel: ObservableObject {
     @Published var destination: Destination? = .home
@@ -222,6 +227,18 @@ final class AppModel: ObservableObject {
 
     var nextModule: LearningModule? {
         curriculum?.modules.first { !progress.completedModuleIDs.contains($0.id) }
+    }
+
+    /// Lessons can be reviewed in any order, so each chapter's state comes from
+    /// its own modules rather than from how many modules are reviewed. The
+    /// current chapter is the one holding `nextModule`, matching Up Next.
+    var chapterStatuses: [ChapterStatus] {
+        guard let curriculum else { return [] }
+        let next = nextModule?.id
+        return curriculum.phases.map { phase in
+            if phase.modules.contains(where: { $0.id == next }) { return .current }
+            return phase.modules.allSatisfy { progress.completedModuleIDs.contains($0.id) } ? .complete : .upcoming
+        }
     }
 
     func openModule(_ id: String) {

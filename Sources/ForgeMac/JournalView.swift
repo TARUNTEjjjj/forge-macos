@@ -30,6 +30,7 @@ struct JournalView: View {
                     VStack(alignment: .leading, spacing: 14) {
                         Eyebrow(text: "Today's intention")
                         TextField("For example: implement BFS and explain why it finds shortest paths", text: $model.focusDraft).textFieldStyle(.roundedBorder)
+                            .disabled(model.readOnly)
                         HStack {
                             Text("One specific outcome is enough.").font(.caption).foregroundStyle(ForgeTheme.muted)
                             Spacer()

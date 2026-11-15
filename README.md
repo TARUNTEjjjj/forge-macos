@@ -120,6 +120,14 @@ or pay. Lesson resources and contest tasks remain attributed to their original s
 
 ## Current validation
 
+On 15 November 2026, after the overview-map and read-only journal fixes were
+merged with the resource library, 31 core checks, 6 native editor/navigation
+checks and 10 resource-refresh integration checks passed, and the debug app
+assembled and passed signature verification. The two added native checks cover
+the overview map when lessons are reviewed out of order and the journal's focus
+field while progress is read-only. Like the other native checks, they use
+temporary files and never request the resource catalog.
+
 On 14 November 2026, 31 core checks, 4 native editor/navigation checks and
 10 resource-refresh integration checks passed. The new checks cover automatic
 timers, overlapping requests, cancellation and late responses, offline restarts,
