@@ -68,7 +68,7 @@ enum NativeChecks {
         // Lessons can be reviewed in any order. The overview map must mark the
         // chapters actually reviewed, and its current chapter must hold Up Next.
         let mapURL = directory.appendingPathComponent("map/progress.json")
-        let learner = AppModel(progressURL: mapURL)
+        let learner = AppModel(progressURL: mapURL, refreshCatalogOnLaunch: false)
         let chapters = catalog.phases, last = chapters.count - 1
         func requireMap(_ model: AppModel, _ marked: [Int: ChapterStatus], _ situation: String) throws {
             var expected = Array(repeating: ChapterStatus.upcoming, count: chapters.count)
@@ -82,7 +82,7 @@ enum NativeChecks {
         try requireMap(learner, [0: .complete, 1: .current], "Chapter 1 reviewed")
         chapters[last].modules.forEach { learner.markComplete($0.id, completed: true) }
         try requireMap(learner, [0: .complete, 1: .current, last: .complete], "Final chapter reviewed early")
-        try requireMap(AppModel(progressURL: mapURL), [0: .complete, 1: .current, last: .complete], "Final chapter after restart")
+        try requireMap(AppModel(progressURL: mapURL, refreshCatalogOnLaunch: false), [0: .complete, 1: .current, last: .complete], "Final chapter after restart")
         learner.markComplete(chapters[0].modules[0].id, completed: false)
         try requireMap(learner, [0: .current, last: .complete], "First lesson reopened")
         catalog.modules.forEach { learner.markComplete($0.id, completed: true) }
@@ -94,7 +94,7 @@ enum NativeChecks {
         let damagedURL = directory.appendingPathComponent("damaged/progress.json")
         try FileManager.default.createDirectory(at: damagedURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("{\"version\":1".utf8).write(to: damagedURL)
-        let damaged = AppModel(progressURL: damagedURL)
+        let damaged = AppModel(progressURL: damagedURL, refreshCatalogOnLaunch: false)
         try require(damaged.readOnly, "Damaged progress did not open read-only")
         try require(focusFieldEnabled(model) == true, "Writable journal focus field is missing or disabled")
         try require(focusFieldEnabled(damaged) == false, "Read-only journal focus field accepts text it cannot save")
