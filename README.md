@@ -84,13 +84,28 @@ History loads 50 rows at a time; filtering does not change your saved data.
 
 The native curriculum is bundled with the app. Progress, lesson notes, daily focus,
 and study sessions use a local JSON file in the app's Application Support location.
-The app supports user-selected JSON backups. A failed or invalid load must be repaired
-or restored before saving so the original data is preserved.
+The app supports user-selected JSON backups. The file and each backup can hold up to
+50 MB: the 20,000-session limit with reflections averaging about 2 KB, plus every
+lesson note at its limit. A failed or invalid load must be repaired or restored before
+saving so the original data is preserved. If two copies of the app are open at once,
+such as an Xcode build beside `build/Forge.app`, each change is saved on top of the
+newest saved progress, and switching to a copy shows what the other saved. If both copies
+edit the same note, or the daily focus, at the same time, the copy that saves last keeps
+its text. Before a restore replaces
+saved progress, the app keeps that file as a dated `progress-before-restore-…` copy
+beside it; choose **File > Show Recovery Copies in Finder** to find these copies. Text
+typed but not yet saved stays in its editor through a restore. Progress for a lesson
+that a later curriculum renames or removes, and fields added by another Forge version,
+are kept rather than rejected or dropped.
 The saved public resource catalog uses a separate file in Application Support.
 Learning backups do not include this replaceable catalog cache.
 
 The online labs open the existing Forge website in a dedicated WebKit window with
 a native toolbar, and require an internet connection.
+Lab work the page keeps only in memory, such as a running focus timer, is kept when
+you open the section already showing. Links the site opens in a new window, such as
+the complete field guide, open in your default browser. Reload asks first when the
+page reports unsaved changes.
 Their website storage is separate from the native progress file and from Chrome's
 storage. A completion in one area does not automatically mark a module complete in
 another. Download or export important work before clearing any app or browser data.

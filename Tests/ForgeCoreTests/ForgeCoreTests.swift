@@ -20,14 +20,21 @@ final class ForgeCoreTests: XCTestCase {
     func testProgressSurvivesNewStoreInstanceAndBackupRoundTrip() throws { try ForgeCoreChecks.run("testProgressSurvivesNewStoreInstanceAndBackupRoundTrip") }
     func testImportOnlyValidatesUntilUserChoosesToRestore() throws { try ForgeCoreChecks.run("testImportOnlyValidatesUntilUserChoosesToRestore") }
     func testMalformedAndTruncatedBackupsAreRejected() throws { try ForgeCoreChecks.run("testMalformedAndTruncatedBackupsAreRejected") }
-    func testUnknownVersionsAndModuleIDsAreRejected() throws { try ForgeCoreChecks.run("testUnknownVersionsAndModuleIDsAreRejected") }
+    func testUnknownVersionsAreRejected() throws { try ForgeCoreChecks.run("testUnknownVersionsAreRejected") }
+    func testProgressForLessonsOutsideTheCurriculumIsKept() throws { try ForgeCoreChecks.run("testProgressForLessonsOutsideTheCurriculumIsKept") }
+    func testFieldsFromOtherForgeVersionsAreKept() throws { try ForgeCoreChecks.run("testFieldsFromOtherForgeVersionsAreKept") }
+    func testNumbersFromOtherForgeVersionsAreKeptExactlyOrLeftOut() throws { try ForgeCoreChecks.run("testNumbersFromOtherForgeVersionsAreKeptExactlyOrLeftOut") }
     func testSessionDurationAndDuplicateIDsAreValidated() throws { try ForgeCoreChecks.run("testSessionDurationAndDuplicateIDsAreValidated") }
     func testInvalidSessionDatesAreRejected() throws { try ForgeCoreChecks.run("testInvalidSessionDatesAreRejected") }
     func testTextLimitsCountUTF8Bytes() throws { try ForgeCoreChecks.run("testTextLimitsCountUTF8Bytes") }
     func testOversizedBackupRejectedBeforeDecoding() throws { try ForgeCoreChecks.run("testOversizedBackupRejectedBeforeDecoding") }
+    func testSessionLimitWithLongReflectionsSavesAndRestores() throws { try ForgeCoreChecks.run("testSessionLimitWithLongReflectionsSavesAndRestores") }
     func testInvalidSavePreservesPreviousSnapshotBytes() throws { try ForgeCoreChecks.run("testInvalidSavePreservesPreviousSnapshotBytes") }
     func testDamagedFileIsPreservedAndNotSilentlyReset() throws { try ForgeCoreChecks.run("testDamagedFileIsPreservedAndNotSilentlyReset") }
+    func testSaveRechecksFilesChangedOutsideTheStore() throws { try ForgeCoreChecks.run("testSaveRechecksFilesChangedOutsideTheStore") }
+    func testOlderProgressNeverReplacesProgressSavedElsewhere() throws { try ForgeCoreChecks.run("testOlderProgressNeverReplacesProgressSavedElsewhere") }
     func testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup() throws { try ForgeCoreChecks.run("testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup") }
+    func testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile() throws { try ForgeCoreChecks.run("testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile") }
     func testInvalidRecoveryDoesNotTouchExistingData() throws { try ForgeCoreChecks.run("testInvalidRecoveryDoesNotTouchExistingData") }
     func testReadOnlyDestinationFailsWithoutReportingSuccess() throws { try ForgeCoreChecks.run("testReadOnlyDestinationFailsWithoutReportingSuccess") }
     func testCalendarTotalsUseLearnersTimezone() throws { try ForgeCoreChecks.run("testCalendarTotalsUseLearnersTimezone") }

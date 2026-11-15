@@ -19,16 +19,16 @@ struct DashboardView: View {
                         .foregroundStyle(ForgeTheme.muted).padding(.top, 4)
                 }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 145))], spacing: 14) {
-                    Metric(value: "\(model.progress.completedModuleIDs.count)/\(model.curriculum?.modules.count ?? 50)", label: "MODULES REVIEWED", symbol: "checkmark.circle")
+                    Metric(value: "\(model.reviewedModuleCount)/\(model.curriculum?.modules.count ?? 50)", label: "MODULES REVIEWED", symbol: "checkmark.circle")
                     Metric(value: "\(model.progress.totalMinutes / 60)h \(model.progress.totalMinutes % 60)m", label: "PRACTICE LOGGED", symbol: "clock")
-                    Metric(value: "\(model.progress.minutes(on: Date())) min", label: "TODAY'S PRACTICE", symbol: "sun.max")
+                    Metric(value: "\(model.minutes(on: [Date()]).first ?? 0) min", label: "TODAY'S PRACTICE", symbol: "sun.max")
                     Metric(value: "\(model.progress.sessions.count)", label: "STUDY SESSIONS", symbol: "square.stack")
                 }
                 HStack(alignment: .top, spacing: 18) {
                     ForgeCard {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack { Eyebrow(text: "Your learning world"); Spacer(); Text("10 CHAPTERS").font(.system(size: 9, design: .monospaced)).foregroundStyle(ForgeTheme.violet) }
-                            LearningWorld(chapters: model.chapterStatuses, completed: model.progress.completedModuleIDs.count).frame(height: 230)
+                            LearningWorld(chapters: model.chapterStatuses, completed: model.reviewedModuleCount).frame(height: 230)
                             Text("From first principles to working software").font(.system(size: 17, weight: .semibold))
                             Text("Python · C++ · Git · algorithms · software engineering")
                                 .font(.system(size: 12)).foregroundStyle(ForgeTheme.muted)

@@ -48,11 +48,15 @@ struct PageHeader: View {
 }
 
 struct PrimaryButtonStyle: ButtonStyle {
+    /// A custom style isn't dimmed for `.disabled` automatically. Without this, a save that
+    /// can't run yet looks exactly like one that can, and clicking it silently does nothing.
+    @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.system(size: 13, weight: .semibold))
             .padding(.horizontal, 18).padding(.vertical, 11)
             .foregroundStyle(.white)
             .background(ForgeTheme.action.opacity(configuration.isPressed ? 0.75 : 1), in: RoundedRectangle(cornerRadius: 10))
+            .opacity(isEnabled ? 1 : 0.45)
     }
 }
 
