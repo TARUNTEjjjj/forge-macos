@@ -13,6 +13,34 @@ private notes and reflections; the user controls where it is stored or shared. I
 validates the file before replacing current progress. The app's normal macOS storage
 is private to that app when running with App Sandbox.
 
+## Public resource catalog
+
+At launch, every 15 minutes while running, and when **Refresh resources** is
+selected, Forge requests one public JSON catalog from the fixed URL
+`https://raw.githubusercontent.com/TARUNTEjjjj/forge-macos/main/resources/catalog.json`.
+Returning to the app or waking the Mac also checks when the interval is due.
+The interval starts after the previous request completes, and overlapping
+automatic or manual requests are not sent.
+GitHub receives ordinary connection details such as the IP address and the
+requested public path. The request contains no lesson progress, notes, search
+text, cookies, access token or account credentials. Catalog searches run locally.
+The ephemeral network session has no HTTP disk cache or credential store,
+rejects redirects, limits the download to 2 MB and validates source URLs before
+showing entries.
+
+Forge saves the validated public catalog in a separate JSON file in the app's
+Application Support location. This file contains public project metadata and
+source observation dates; it contains no lesson progress, notes, search history,
+cookies, request headers or account credentials. It is separate from native
+progress storage and is not included in learning backups.
+
+The saved catalog supports offline restarts. Failed checks preserve the current
+collection and its previous saved copy, and an older downloaded snapshot does
+not replace newer saved metadata. If no valid saved copy can be used, the bundled
+offline edition remains available. The Library identifies the displayed edition,
+the app's last successful check, source collection dates and stale-data notices. Checking
+again does not change the source's observation dates.
+
 ## Online labs and source links
 
 Loading the online labs contacts `forge-learning-academy.pages.dev`. The website and

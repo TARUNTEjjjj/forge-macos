@@ -4,6 +4,10 @@ import ForgeCore
 struct JournalView: View {
     @EnvironmentObject var model: AppModel
     @ViewState<UUID?> private var deleteSession = nil
+    @ViewState private var sessionSearch = ""
+    @ViewState private var lessonFilter = "all"
+    @ViewState private var historyDays = 0
+    @ViewState private var visibleCount = 50
     private var dates: [Date] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -13,6 +17,12 @@ struct JournalView: View {
         let displayedDates = dates
         let dailyMinutes = model.progress.minutes(on: displayedDates)
         let peak = max(1, dailyMinutes.max() ?? 1)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let since = historyDays > 0 ? calendar.date(byAdding: .day, value: 1 - historyDays, to: today) : nil
+        let before = historyDays > 0 ? calendar.date(byAdding: .day, value: 1, to: today) : nil
+        let titles = Dictionary(uniqueKeysWithValues: (model.curriculum?.modules ?? []).map { ($0.id, $0.title) })
+        let sessions = model.progress.filteredSessions(query: sessionSearch, moduleID: lessonFilter == "all" ? nil : lessonFilter, since: since, before: before, moduleTitles: titles)
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
                 PageHeader(eyebrow: "Make the practice visible", title: "Your practice journal", subtitle: "Choose a focus. Do the work. Record the evidence. Time logged here is your own record, separate from online lab progress.")
@@ -71,10 +81,31 @@ struct JournalView: View {
                     }.disabled(model.readOnly)
                 }
                 HStack { Text("Recent sessions").font(.title2.bold()); Spacer(); Button("Export backup…") { model.exportBackup() }.disabled(model.readOnly); Button("Restore backup…") { model.chooseBackup() } }
+                VStack(alignment: .leading, spacing: 12) {
+                    TextField("Search reflections or lessons", text: $sessionSearch).textFieldStyle(.roundedBorder)
+                    HStack {
+                        Picker("Lesson filter", selection: $lessonFilter) {
+                            Text("All lessons").tag("all")
+                            Text("Independent practice").tag("")
+                            ForEach(model.curriculum?.modules ?? []) { module in Text(module.title).tag(module.id) }
+                        }
+                        Picker("Date range", selection: $historyDays) {
+                            Text("All time").tag(0)
+                            Text("Last 7 days").tag(7)
+                            Text("Last 30 days").tag(30)
+                        }.frame(maxWidth: 220)
+                    }
+                    Text("\(sessions.count) matching sessions · \(sessions.reduce(0) { $0 + $1.minutes }) minutes").font(.caption).foregroundStyle(ForgeTheme.muted)
+                }
+                .onChange(of: sessionSearch) { _, _ in visibleCount = 50 }
+                .onChange(of: lessonFilter) { _, _ in visibleCount = 50 }
+                .onChange(of: historyDays) { _, _ in visibleCount = 50 }
                 if model.progress.sessions.isEmpty {
                     EmptyMessage(icon: "pencil.and.outline", title: "Your first session starts the story", detail: "A useful reflection names the problem, the approach you tried, and what the result taught you.")
+                } else if sessions.isEmpty {
+                    EmptyMessage(icon: "magnifyingglass", title: "No matching sessions", detail: "Try another search, lesson, or date range. Your saved history is unchanged.")
                 }
-                ForEach(model.progress.sessions.sorted(by: { $0.date > $1.date })) { session in
+                ForEach(Array(sessions.prefix(visibleCount))) { session in
                     ForgeCard {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
@@ -89,6 +120,9 @@ struct JournalView: View {
                             Text(session.reflection).lineSpacing(4).textSelection(.enabled)
                         }
                     }
+                }
+                if sessions.count > visibleCount {
+                    Button("Show 50 more sessions") { visibleCount += 50 }.buttonStyle(.link)
                 }
             }.padding(32).frame(maxWidth: 1150)
         }

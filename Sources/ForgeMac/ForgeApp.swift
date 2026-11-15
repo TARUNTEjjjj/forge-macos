@@ -10,6 +10,17 @@ enum ForgeLauncher {
                 print("Bundled curriculum: \(curriculum.modules.count) modules, \(curriculum.totalHours) hours")
             } else if CommandLine.arguments.contains("--check-native") {
                 try NativeChecks.run()
+            } else if CommandLine.arguments.contains("--check-resource-refresh") {
+                Task { @MainActor in
+                    do {
+                        try await NativeChecks.runResourceRefresh()
+                        exit(0)
+                    } catch {
+                        fputs("Forge resource refresh check failed: \(error.localizedDescription)\n", stderr)
+                        exit(1)
+                    }
+                }
+                RunLoop.main.run()
             } else { ForgeApp.main() }
         } catch {
             fputs("Forge check failed: \(error.localizedDescription)\n", stderr)
@@ -47,6 +58,22 @@ struct ForgeApp: App {
 @MainActor
 final class ForgeLifecycle: NSObject, NSApplicationDelegate {
     weak var model: AppModel?
+    private var wakeObserver: NSObjectProtocol?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.model?.refreshResourceCatalogIfDue() }
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        model?.refreshResourceCatalogIfDue()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        model?.stopResourceCatalogRefresh()
+        if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
+    }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let model else { return .terminateNow }
         let notesSaved = model.readOnly || model.flushNotes()

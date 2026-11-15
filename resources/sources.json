@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "project": "forge-macos",
+  "title": "Forge native learning library",
+  "minStars": 500,
+  "maxPerCategory": 12,
+  "categories": [
+    {
+      "id": "programming",
+      "title": "Programming foundations",
+      "queries": [
+        "topic:learn-to-code"
+      ],
+      "seeds": [
+        "freeCodeCamp/freeCodeCamp",
+        "TheAlgorithms/Python",
+        "ossu/computer-science"
+      ]
+    },
+    {
+      "id": "cs",
+      "title": "Computer science pathways",
+      "queries": [
+        "topic:computer-science"
+      ],
+      "seeds": [
+        "ossu/computer-science",
+        "practical-tutorials/project-based-learning"
+      ]
+    }
+  ]
+}

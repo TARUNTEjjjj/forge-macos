@@ -127,11 +127,68 @@ private struct LessonReader: View {
 struct ResourceLibraryView: View {
     @EnvironmentObject var model: AppModel
     @ViewState<String> private var query = ""
+    @ViewState<String> private var catalogCategory = ""
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 PageHeader(eyebrow: "Keep good references close", title: "The library", subtitle: "Official documentation and original problem judges. Work through the lessons, then go deeper at the source.")
                 TextField("Search resources and problems", text: $query).textFieldStyle(.roundedBorder)
+                if let catalog = model.resourceCatalog {
+                    Text("Open-source discovery").font(.title2.bold())
+                    Text(model.resourceCatalogOrigin + " · collected " + (catalog.fetchedAt ?? "date unavailable"))
+                        .font(.caption).foregroundStyle(ForgeTheme.muted)
+                    if catalog.status == "seed" {
+                        Text("Curated starting points. Live popularity has not been checked.").font(.caption).foregroundStyle(ForgeTheme.muted)
+                    } else if catalog.hasStaleMetadata {
+                        Text("Some metadata is older than 24 hours or its last refresh was incomplete.").font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
+                    Text("Explore relevant GitHub projects. Stars describe popularity; the source and license remain with each project. Forge checks on launch and every 15 minutes while open, and checks after waking if an update is due. The latest valid collection is saved on this Mac for offline use.")
+                        .font(.callout).foregroundStyle(ForgeTheme.muted)
+                    HStack {
+                        Button(model.isRefreshingResourceCatalog ? "Refreshing…" : "Refresh resources") { model.refreshResourceCatalog() }
+                            .disabled(model.isRefreshingResourceCatalog)
+                        if model.isRefreshingResourceCatalog { ProgressView().controlSize(.small) }
+                    }
+                    if model.resourceCatalogSavedOffline {
+                        Label("This collection is saved on this Mac for offline use.", systemImage: "arrow.down.circle")
+                            .font(.caption).foregroundStyle(ForgeTheme.mint)
+                    }
+                    if let checked = model.resourceCatalogLastCheckedAt {
+                        Text("Last successful check: " + checked.formatted(date: .abbreviated, time: .shortened))
+                            .font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
+                    if let next = model.resourceCatalogNextRefreshAt {
+                        Text("Next automatic check: " + next.formatted(date: .omitted, time: .shortened))
+                            .font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
+                    if let notice = model.resourceCatalogRefreshNotice {
+                        Text(notice).font(.caption).foregroundStyle(ForgeTheme.muted)
+                    }
+                    Picker("Resource category", selection: $catalogCategory) {
+                        Text("All categories").tag("")
+                        ForEach(catalog.categories) { category in Text(category.title).tag(category.id) }
+                    }.pickerStyle(.menu)
+                    let matches = catalog.matching(query, category: catalogCategory)
+                    if matches.isEmpty { Text("No GitHub resources match this search.").foregroundStyle(ForgeTheme.muted) }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 280))], alignment: .leading, spacing: 14) {
+                        ForEach(matches) { resource in
+                            ForgeCard {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Eyebrow(text: resource.category)
+                                    Text(resource.fullName).font(.system(size: 17, weight: .semibold))
+                                    Text(resource.description).font(.system(size: 12)).foregroundStyle(ForgeTheme.muted).lineLimit(4)
+                                    Text((resource.stars.map { "\($0.formatted()) stars" } ?? "Stars unverified") + " · " + (resource.license ?? "License unreported"))
+                                        .font(.caption).foregroundStyle(ForgeTheme.muted)
+                                    if resource.isStale() { Text("Previous snapshot · check the source for current details").font(.caption).foregroundStyle(ForgeTheme.muted) }
+                                    Button("Open on GitHub ↗") { model.openExternal(resource.url) }.buttonStyle(.link)
+                                }.frame(minHeight: 160, alignment: .top)
+                            }
+                        }
+                    }
+                } else if let error = model.resourceCatalogError {
+                    Text(error).font(.callout).foregroundStyle(ForgeTheme.muted)
+                }
+                Text("Official learning references").font(.title2.bold())
                 if let curriculum = model.curriculum {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 280))], alignment: .leading, spacing: 14) {
                         ForEach(curriculum.resources.filter { query.isEmpty || ($0.title + " " + $0.topic).localizedCaseInsensitiveContains(query) }) { resource in
@@ -157,6 +214,9 @@ struct ResourceLibraryView: View {
                     }
                 }
             }.padding(32).frame(maxWidth: 1200)
+        }
+        .onChange(of: model.resourceCatalog?.categories.map(\.id) ?? []) { _, categories in
+            if !catalogCategory.isEmpty && !categories.contains(catalogCategory) { catalogCategory = "" }
         }
     }
 }
