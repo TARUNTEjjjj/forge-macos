@@ -32,6 +32,7 @@ public enum ForgeCoreChecks {
         "testDamagedFileIsPreservedAndNotSilentlyReset",
         "testSaveRechecksFilesChangedOutsideTheStore",
         "testOlderProgressNeverReplacesProgressSavedElsewhere",
+        "testOverlappingProgressSavesKeepBothChanges",
         "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup",
         "testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile",
         "testInvalidRecoveryDoesNotTouchExistingData",
@@ -77,6 +78,7 @@ public enum ForgeCoreChecks {
         case "testDamagedFileIsPreservedAndNotSilentlyReset": try cases.testDamagedFileIsPreservedAndNotSilentlyReset()
         case "testSaveRechecksFilesChangedOutsideTheStore": try cases.testSaveRechecksFilesChangedOutsideTheStore()
         case "testOlderProgressNeverReplacesProgressSavedElsewhere": try cases.testOlderProgressNeverReplacesProgressSavedElsewhere()
+        case "testOverlappingProgressSavesKeepBothChanges": try cases.testOverlappingProgressSavesKeepBothChanges()
         case "testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup": try cases.testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup()
         case "testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile": try cases.testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile()
         case "testInvalidRecoveryDoesNotTouchExistingData": try cases.testInvalidRecoveryDoesNotTouchExistingData()
@@ -588,6 +590,50 @@ private final class CoreCases {
         try XCTAssertEqual(try empty.save(ProgressSnapshot()) { $0.dailyFocus = "Kept" }.sessions, older.sessions)
     }
 
+    func testOverlappingProgressSavesKeepBothChanges() throws {
+        let original = sampleSnapshot()
+        try store.save(original)
+        let first = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        let second = ProgressFileStore(fileURL: store.fileURL, allowedModuleIDs: store.allowedModuleIDs)
+        _ = try first.load()
+        _ = try second.load()
+        let entered = DispatchSemaphore(value: 0)
+        let release = DispatchSemaphore(value: 0)
+        let finished = DispatchGroup()
+        let failures = SaveFailures()
+        finished.enter()
+        DispatchQueue.global().async {
+            defer { finished.leave() }
+            do {
+                _ = try first.save(original) {
+                    entered.signal()
+                    _ = release.wait(timeout: .now() + 5)
+                    $0.notes["f01"] = "First overlapping edit"
+                }
+            } catch { failures.append(error) }
+        }
+        guard entered.wait(timeout: .now() + 5) == .success else {
+            release.signal()
+            throw CheckFailure(description: "First save never entered its change")
+        }
+        let secondFinished = DispatchSemaphore(value: 0)
+        finished.enter()
+        DispatchQueue.global().async {
+            defer { secondFinished.signal(); finished.leave() }
+            do { _ = try second.save(original) { $0.notes["f02"] = "Second overlapping edit" } }
+            catch { failures.append(error) }
+        }
+        // Without transaction locking the second writer finishes while the first
+        // holds an old snapshot, which the first then writes over the second edit.
+        _ = secondFinished.wait(timeout: .now() + 0.2)
+        release.signal()
+        try XCTAssertEqual(finished.wait(timeout: .now() + 5), .success)
+        try failures.check()
+        let saved = try store.load()
+        try XCTAssertEqual(saved.notes["f01"], "First overlapping edit")
+        try XCTAssertEqual(saved.notes["f02"], "Second overlapping edit")
+    }
+
     func testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup() throws {
         try FileManager.default.createDirectory(at: store.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let damaged = Data("damaged original".utf8)
@@ -625,9 +671,10 @@ private final class CoreCases {
     func testInvalidRecoveryDoesNotTouchExistingData() throws {
         try store.save(sampleSnapshot())
         let before = try Data(contentsOf: store.fileURL)
+        let previousNames = try FileManager.default.contentsOfDirectory(atPath: store.fileURL.deletingLastPathComponent().path).sorted()
         try XCTAssertThrowsError(try store.recoverFromBackup(Data("{}".utf8)))
         try XCTAssertEqual(try Data(contentsOf: store.fileURL), before)
-        try XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: store.fileURL.deletingLastPathComponent().path), ["progress.json"])
+        try XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: store.fileURL.deletingLastPathComponent().path).sorted(), previousNames)
     }
 
     func testReadOnlyDestinationFailsWithoutReportingSuccess() throws {
@@ -767,6 +814,13 @@ private final class CatalogFixtureProtocol: URLProtocol, @unchecked Sendable {
         client?.urlProtocolDidFinishLoading(self)
     }
     override func stopLoading() {}
+}
+
+private final class SaveFailures: @unchecked Sendable {
+    private let lock = NSLock()
+    private var errors: [Error] = []
+    func append(_ error: Error) { lock.lock(); defer { lock.unlock() }; errors.append(error) }
+    func check() throws { lock.lock(); defer { lock.unlock() }; if let error = errors.first { throw error } }
 }
 
 private final class CatalogFixtureResult: @unchecked Sendable {

@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public struct StudySession: Codable, Identifiable, Equatable, Sendable {
     public var id: UUID
@@ -282,23 +283,28 @@ public struct ProgressFileStore: Sendable {
     /// it is and this throws `changedElsewhere`; `save(_:applying:)` merges instead.
     public func save(_ snapshot: ProgressSnapshot) throws {
         let data = try exportData(snapshot)
-        guard try newerSavedProgress() == nil else { throw ProgressError.changedElsewhere }
-        try writeAtomically(data)
-        known.update(data)
+        try withWriteLock {
+            guard try newerSavedProgress() == nil else { throw ProgressError.changedElsewhere }
+            try writeAtomically(data)
+            known.update(data)
+        }
     }
 
     /// Applies `change` to the newest saved progress, saves the result and returns it.
     /// `current` is the progress this store last loaded or saved. When another Forge
     /// window or app has saved valid progress since, `change` is applied to that
     /// instead, so a window showing older progress never erases newer work.
+    /// The change runs inside the write transaction; it must not call save or restore.
     public func save(_ current: ProgressSnapshot,
                      applying change: (inout ProgressSnapshot) -> Void) throws -> ProgressSnapshot {
-        var snapshot = try newerSavedProgress() ?? current
-        change(&snapshot)
-        let data = try exportData(snapshot)
-        try writeAtomically(data)
-        known.update(data)
-        return snapshot
+        try withWriteLock {
+            var snapshot = try newerSavedProgress() ?? current
+            change(&snapshot)
+            let data = try exportData(snapshot)
+            try writeAtomically(data)
+            known.update(data)
+            return snapshot
+        }
     }
 
     /// Valid progress on disk that this store did not load or write itself, such as
@@ -345,10 +351,12 @@ public struct ProgressFileStore: Sendable {
     public func restoreBackup(_ data: Data) throws -> (snapshot: ProgressSnapshot, recoveryCopy: URL?) {
         let snapshot = try importData(data)
         let normalized = try exportData(snapshot)
-        let copy = try keepRecoveryCopy()
-        try writeAtomically(normalized)
-        known.update(normalized)
-        return (snapshot, copy)
+        return try withWriteLock {
+            let copy = try keepRecoveryCopy()
+            try writeAtomically(normalized)
+            known.update(normalized)
+            return (snapshot, copy)
+        }
     }
 
     /// The recovery copies that restores have kept beside the progress file, by name.
@@ -388,6 +396,30 @@ public struct ProgressFileStore: Sendable {
         let data = try Data(contentsOf: url)
         guard data.count <= Self.maximumBackupBytes else { throw ProgressError.oversizedBackup }
         return data
+    }
+
+    /// Lock a stable sibling, not the progress inode replaced by an atomic write.
+    /// Keep the lock file in place: unlinking it could give two writers different
+    /// inodes to lock. Closing releases the lock even when the operation throws.
+    private func withWriteLock<T>(_ operation: () throws -> T) throws -> T {
+        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        let lockURL = fileURL.appendingPathExtension("lock")
+        var descriptor: Int32
+        repeat {
+            descriptor = open(lockURL.path, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, mode_t(0o600))
+        } while descriptor < 0 && errno == EINTR
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        defer { close(descriptor) }
+        var information = stat()
+        guard fstat(descriptor, &information) == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        guard information.st_mode & S_IFMT == S_IFREG else { throw POSIXError(.EINVAL) }
+        var result: Int32
+        repeat { result = flock(descriptor, LOCK_EX) } while result < 0 && errno == EINTR
+        guard result == 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        return try operation()
     }
 
     private func writeAtomically(_ data: Data) throws {

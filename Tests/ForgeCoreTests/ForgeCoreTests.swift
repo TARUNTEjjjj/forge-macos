@@ -33,6 +33,7 @@ final class ForgeCoreTests: XCTestCase {
     func testDamagedFileIsPreservedAndNotSilentlyReset() throws { try ForgeCoreChecks.run("testDamagedFileIsPreservedAndNotSilentlyReset") }
     func testSaveRechecksFilesChangedOutsideTheStore() throws { try ForgeCoreChecks.run("testSaveRechecksFilesChangedOutsideTheStore") }
     func testOlderProgressNeverReplacesProgressSavedElsewhere() throws { try ForgeCoreChecks.run("testOlderProgressNeverReplacesProgressSavedElsewhere") }
+    func testOverlappingProgressSavesKeepBothChanges() throws { try ForgeCoreChecks.run("testOverlappingProgressSavesKeepBothChanges") }
     func testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup() throws { try ForgeCoreChecks.run("testExplicitRecoveryPreservesDamagedOriginalAndRestoresBackup") }
     func testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile() throws { try ForgeCoreChecks.run("testRestoreKeepsADatedRecoveryCopyOnlyWhenThereIsAFile") }
     func testInvalidRecoveryDoesNotTouchExistingData() throws { try ForgeCoreChecks.run("testInvalidRecoveryDoesNotTouchExistingData") }
