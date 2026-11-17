@@ -91,7 +91,9 @@ saving so the original data is preserved. If two copies of the app are open at o
 such as an Xcode build beside `build/Forge.app`, each change is saved on top of the
 newest saved progress, and switching to a copy shows what the other saved. If both copies
 edit the same note, or the daily focus, at the same time, the copy that saves last keeps
-its text. Before a restore replaces
+its text. Saves and restores share a file lock, so overlapping writes from updated
+copies also preserve separate edits. Older builds without that lock should be closed
+while using this version. Before a restore replaces
 saved progress, the app keeps that file as a dated `progress-before-restore-…` copy
 beside it; choose **File > Show Recovery Copies in Finder** to find these copies. Text
 typed but not yet saved stays in its editor through a restore. Progress for a lesson
