@@ -22,26 +22,13 @@ enum ChapterStatus: String {
     case upcoming, current, complete
 }
 
-/// The journal's history list for one search: the matching sessions, newest first,
-/// and the minutes they add up to.
-struct SessionMatches: Equatable {
-    var sessions: [StudySession] = []
-    var minutes = 0
-}
-
-/// One journal search, as `ProgressSnapshot.filteredSessions` takes it.
-private struct SessionSearch: Hashable {
-    var query: String
-    var moduleID: String?
-    var since: Date?
-    var before: Date?
-}
-
 /// `AppModel`'s copies of history-sized values, for one saved progress.
 private struct HistoryCache {
     var calendar: Calendar?
     /// Daily totals by the start of each requested day.
     var minutes: [[Date]: [Int]] = [:]
+    /// The saved sessions, sorted once for every journal search of this progress.
+    var index: SessionSearchIndex?
     /// The journal's matching sessions, by search.
     var matches: [SessionSearch: SessionMatches] = [:]
 }
@@ -61,7 +48,10 @@ final class AppModel: ObservableObject {
     @Published private(set) var resourceCatalogLastCheckedAt: Date?
     @Published private(set) var resourceCatalogNextRefreshAt: Date?
     @Published private(set) var progress = ProgressSnapshot() {
-        didSet { history = HistoryCache() }
+        didSet {
+            history = HistoryCache()
+            progressVersion += 1
+        }
     }
     @Published private(set) var readOnly = false
     @Published var message: String?
@@ -91,6 +81,9 @@ final class AppModel: ObservableObject {
     /// whenever a resource refresh publishes its state. So views read history through these
     /// copies, which are recomputed only for new progress or a new journal search.
     private var history = HistoryCache()
+    /// Counts each new saved progress, so a search that finishes later can tell whether
+    /// the sessions it searched are still the ones saved.
+    private var progressVersion = 0
     /// How many times history-sized values were computed; native checks read it.
     private(set) var historyComputations = 0
     /// Journal searches kept at once. Each holds up to the whole history, and each search
@@ -286,14 +279,45 @@ final class AppModel: ObservableObject {
     func matchingSessions(query: String = "", moduleID: String? = nil,
                           since: Date? = nil, before: Date? = nil) -> SessionMatches {
         let search = SessionSearch(query: query, moduleID: moduleID, since: since, before: before)
-        if let matches = history.matches[search] { return matches }
+        if let matches = cachedMatches(search) { return matches }
+        let matches = searchIndex.matches(search) ?? SessionMatches()
+        keep(matches, for: search)
+        return matches
+    }
+
+    /// The matching sessions for `search` if they are already found for this saved progress.
+    func cachedMatches(_ search: SessionSearch) -> SessionMatches? {
+        history.matches[search]
+    }
+
+    /// Finds `search`'s sessions away from the main actor and keeps them, so the journal can
+    /// then show them without searching while it draws. The returned task reports whether
+    /// they were kept: a search that finishes after saved progress changed is dropped, since
+    /// its sessions are out of date, and so is a cancelled one.
+    func prepareMatches(_ search: SessionSearch) -> Task<Bool, Never> {
+        if cachedMatches(search) != nil { return Task { true } }
+        let index = searchIndex, version = progressVersion
+        return Task { [weak self] in
+            guard let matches = await index.matchesInBackground(search), !Task.isCancelled,
+                  let self, self.progressVersion == version else { return false }
+            self.keep(matches, for: search)
+            return true
+        }
+    }
+
+    /// The saved sessions sorted for searching, prepared once per saved progress.
+    private var searchIndex: SessionSearchIndex {
+        if let index = history.index { return index }
         let titles = Dictionary(uniqueKeysWithValues: (curriculum?.modules ?? []).map { ($0.id, $0.title) })
-        let sessions = progress.filteredSessions(query: query, moduleID: moduleID, since: since, before: before, moduleTitles: titles)
-        let matches = SessionMatches(sessions: sessions, minutes: sessions.reduce(0) { $0 + $1.minutes })
-        if history.matches.count >= Self.keptSearches { history.matches.removeAll() }
+        let index = SessionSearchIndex(sessions: progress.sessions, moduleTitles: titles)
+        history.index = index
+        return index
+    }
+
+    private func keep(_ matches: SessionMatches, for search: SessionSearch) {
+        if history.matches[search] == nil, history.matches.count >= Self.keptSearches { history.matches.removeAll() }
         history.matches[search] = matches
         historyComputations += 1
-        return matches
     }
 
     /// Minutes practiced on each of `days`, as `ProgressSnapshot.minutes(on:calendar:)` counts them.

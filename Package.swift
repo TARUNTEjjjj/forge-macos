@@ -14,6 +14,8 @@ let package = Package(
         .executableTarget(name: "ForgeMac", dependencies: ["ForgeCore"]),
         .target(name: "ForgeCheckSupport", dependencies: ["ForgeCore"], path: "Tests/ForgeCheckSupport"),
         .executableTarget(name: "ForgeCoreChecks", dependencies: ["ForgeCheckSupport"], path: "Tests/ForgeCoreChecks"),
-        .testTarget(name: "ForgeCoreTests", dependencies: ["ForgeCheckSupport"])
+        .testTarget(name: "ForgeCoreTests", dependencies: ["ForgeCheckSupport"]),
+        // Release-build timing of journal search on a synthetic 20,000-session history.
+        .executableTarget(name: "JournalSearchBenchmark", dependencies: ["ForgeCore"], path: "Benchmarks/JournalSearchBenchmark")
     ]
 )

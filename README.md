@@ -121,6 +121,7 @@ See [privacy](docs/privacy.md) for the native and online data boundaries.
 | `Sources/ForgeCore` | Curriculum models and validated local persistence |
 | `Sources/ForgeCore/Resources/curriculum.json` | Original Forge lessons and source links |
 | `Tests/ForgeCoreTests` | Curriculum and persistence regression tests |
+| `Benchmarks/JournalSearchBenchmark` | Release-build journal search timing on a synthetic 20,000-session history (`scripts/swift-command.sh run -c release JournalSearchBenchmark`) |
 | `Config` | App metadata, entitlements, privacy manifest, icon |
 | `Forge.xcodeproj` | macOS app target for Xcode signing and archiving |
 | `scripts` | Local build/test scripts and reproducible icon source |

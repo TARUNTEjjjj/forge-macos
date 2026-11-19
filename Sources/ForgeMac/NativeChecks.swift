@@ -704,3 +704,128 @@ extension NativeChecks {
         print("PASS real elapsed-time scheduler refreshes automatically while the model is alive")
     }
 }
+
+/// A journal search that answers at once, or waits until the check releases it, so checks
+/// can finish an older search after a newer one.
+@MainActor
+private final class HeldSearches {
+    var slow: Set<String>
+    private(set) var started: [String] = []
+    private var held: [String: CheckedContinuation<Void, Never>] = [:]
+
+    init(slow: Set<String> = []) { self.slow = slow }
+
+    func prepare(_ text: String) async -> Bool {
+        started.append(text)
+        if slow.contains(text) { await withCheckedContinuation { held[text] = $0 } }
+        return true
+    }
+
+    func release(_ text: String) { held.removeValue(forKey: text)?.resume() }
+}
+
+extension NativeChecks {
+    /// Typing in the journal search runs each search off the main actor, and only the
+    /// newest text may change the list, however the searches finish.
+    static func runJournalSearch() async throws {
+        // An older search that finishes after a newer one must not replace it.
+        var searches = HeldSearches(slow: ["a"])
+        var query = JournalSearchQuery(debounce: .zero)
+        query.type("a", prepare: searches.prepare)
+        try await eventually("The search for “a” never started") { searches.started == ["a"] }
+        query.type("ab", prepare: searches.prepare)
+        await query.settle()
+        try require(query.applied == "ab" && !query.isPending, "The newer search “ab” wasn't shown")
+        searches.release("a")
+        for _ in 0..<20 { await Task.yield() }
+        try await Task.sleep(for: .milliseconds(20))
+        try require(query.applied == "ab", "A slower, older search replaced the newer one")
+        print("PASS a slower older journal search never replaces a newer one")
+
+        // Backspacing goes back to earlier text, and clearing shows every session at once,
+        // while the abandoned searches finish late.
+        searches = HeldSearches(slow: ["abc", "abcd"])
+        query = JournalSearchQuery(debounce: .zero)
+        query.type("abc", prepare: searches.prepare)
+        query.type("abcd", prepare: searches.prepare)
+        try await eventually("The search for “abcd” never started") { searches.started.last == "abcd" }
+        query.type("abc", prepare: searches.prepare)
+        try await eventually("The search for “abc” never started again") { searches.started.last == "abc" && searches.started.count >= 2 }
+        searches.slow = []
+        query.type("ab", prepare: searches.prepare)
+        await query.settle()
+        try require(query.applied == "ab", "Backspacing to “ab” didn't show its sessions")
+        query.type("a", prepare: searches.prepare)
+        query.type("", prepare: searches.prepare)
+        try require(query.applied == "" && !query.isPending, "Clearing the search didn't show every session at once")
+        query.type("   ", prepare: searches.prepare)
+        try require(query.applied == "   " && !query.isPending, "A search of spaces waited for a search")
+        query.type("", prepare: searches.prepare)
+        searches.release("abcd")
+        searches.release("abc")
+        await query.settle()
+        try await Task.sleep(for: .milliseconds(20))
+        try require(query.applied == "", "An abandoned search came back after the search was cleared")
+        print("PASS backspacing and clearing the journal search ignore abandoned searches")
+
+        // Quick typing searches once, for the text typed when typing pauses; text whose
+        // sessions are already found is shown without waiting.
+        searches = HeldSearches()
+        query = JournalSearchQuery(debounce: .milliseconds(40))
+        for text in ["q", "qu", "que", "queu", "queue"] { query.type(text, prepare: searches.prepare) }
+        try require(query.applied == "" && query.isPending, "Typing showed sessions before typing paused")
+        await query.settle()
+        try require(searches.started == ["queue"] && query.applied == "queue", "Quick typing searched \(searches.started)")
+        query.type("queue ", prepare: searches.prepare)
+        try require(query.applied == "queue " && searches.started.count == 1, "A trailing space searched again")
+        query.type("queues", isReady: { $0 == "queues" }, prepare: searches.prepare)
+        try require(query.applied == "queues" && searches.started.count == 1, "Found sessions waited for a search")
+        print("PASS quick journal typing searches once when typing pauses")
+
+        // The journal's model searches off the main actor and keeps only sessions found in
+        // the saved progress that is current when the search finishes.
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Forge-search-check-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("progress.json")
+        let now = Date()
+        let sessions = (0..<2_000).map {
+            StudySession(date: now.addingTimeInterval(Double(-$0 * 600)), minutes: 5 + $0 % 50,
+                         reflection: $0.isMultiple(of: 3) ? "Queue invariant \($0)" : "Graph walk \($0)")
+        }
+        let model = AppModel(progressURL: url, refreshCatalogOnLaunch: false)
+        try require(model.update { $0.sessions = sessions }, "The search check could not save sessions")
+        let titles = Dictionary(uniqueKeysWithValues: (model.curriculum?.modules ?? []).map { ($0.id, $0.title) })
+        let queueSearch = SessionSearch(query: "queue")
+        let stale = model.prepareMatches(queueSearch)
+        try require(model.update { $0.sessions.append(StudySession(date: now.addingTimeInterval(60), minutes: 9, reflection: "New queue")) },
+                    "The search check could not add a session")
+        let staleKept = await stale.value
+        try require(!staleKept && model.cachedMatches(queueSearch) == nil,
+                    "A search of older saved progress was kept")
+        let kept = await model.prepareMatches(queueSearch).value
+        try require(kept, "A search of the saved progress wasn't kept")
+        let expected = model.progress.filteredSessions(query: "queue", moduleTitles: titles)
+        try require(model.cachedMatches(queueSearch)?.sessions == expected && expected.first?.reflection == "New queue"
+                    && model.matchingSessions(query: "queue").minutes == expected.reduce(0) { $0 + $1.minutes },
+                    "The background search found other sessions than the store")
+        // Lesson and date filters apply to a background search as they do to the list.
+        let filtered = SessionSearch(query: "graph", moduleID: "", since: now.addingTimeInterval(-86_400), before: now)
+        let filteredKept = await model.prepareMatches(filtered).value
+        try require(filteredKept && model.cachedMatches(filtered)?.sessions == model.progress.filteredSessions(
+                        query: "graph", moduleID: "", since: filtered.since, before: filtered.before, moduleTitles: titles),
+                    "A background search ignored the lesson or date filter")
+
+        // Typing in the journal applies the newest text once its sessions are kept, even when
+        // saved progress changes while the search is pending.
+        query = JournalSearchQuery(debounce: .milliseconds(10))
+        let prepare: @MainActor (String) async -> Bool = { await model.prepareMatches(SessionSearch(query: $0)).value }
+        for text in ["w", "wa", "wal", "walk"] { query.type(text, prepare: prepare) }
+        try require(model.update { $0.sessions.append(StudySession(date: now.addingTimeInterval(120), minutes: 7, reflection: "Late walk")) },
+                    "The search check could not add a session")
+        await query.settle()
+        try require(query.applied == "walk" && model.cachedMatches(SessionSearch(query: "walk"))?.sessions.first?.reflection == "Late walk",
+                    "The journal search showed sessions from older saved progress")
+        print("PASS journal searches run in the background and keep only current saved progress")
+        print("4/4 journal search checks passed")
+    }
+}

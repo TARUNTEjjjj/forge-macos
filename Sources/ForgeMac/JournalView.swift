@@ -5,6 +5,9 @@ struct JournalView: View {
     @EnvironmentObject var model: AppModel
     @ViewState<UUID?> private var deleteSession = nil
     @ViewState private var sessionSearch = ""
+    /// The search text the list shows sessions for; it follows `sessionSearch` once that
+    /// text's sessions are found off the main actor, so typing never waits for a search.
+    @StateObject private var searchQuery = JournalSearchQuery()
     @ViewState private var lessonFilter = "all"
     @ViewState private var historyDays = 0
     @ViewState private var visibleCount = 50
@@ -17,14 +20,12 @@ struct JournalView: View {
         let displayedDates = dates
         // Typing in this view's editors redraws it on every keystroke, so history-sized totals
         // and the matching sessions come from the model's copies, recomputed only when saved
-        // progress or the search changes.
+        // progress, a filter, or the applied search changes. Typed search text is applied once
+        // its sessions have been found in the background.
         let dailyMinutes = model.minutes(on: displayedDates)
         let peak = max(1, dailyMinutes.max() ?? 1)
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let since = historyDays > 0 ? calendar.date(byAdding: .day, value: 1 - historyDays, to: today) : nil
-        let before = historyDays > 0 ? calendar.date(byAdding: .day, value: 1, to: today) : nil
-        let matches = model.matchingSessions(query: sessionSearch, moduleID: lessonFilter == "all" ? nil : lessonFilter, since: since, before: before)
+        let search = sessionSearch(for: searchQuery.applied)
+        let matches = model.matchingSessions(query: search.query, moduleID: search.moduleID, since: search.since, before: search.before)
         let sessions = matches.sessions
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
@@ -99,9 +100,16 @@ struct JournalView: View {
                             Text("Last 30 days").tag(30)
                         }.frame(maxWidth: 220)
                     }
-                    Text("\(sessions.count) matching sessions · \(matches.minutes) minutes").font(.caption).foregroundStyle(ForgeTheme.muted)
+                    Text("\(sessions.count) matching sessions · \(matches.minutes) minutes\(searchQuery.isPending ? " · Searching…" : "")")
+                        .font(.caption).foregroundStyle(ForgeTheme.muted)
                 }
-                .onChange(of: sessionSearch) { _, _ in visibleCount = 50 }
+                .onChange(of: sessionSearch) { _, text in
+                    visibleCount = 50
+                    searchQuery.type(text, isReady: { model.cachedMatches(sessionSearch(for: $0)) != nil }) { text in
+                        await model.prepareMatches(sessionSearch(for: text)).value
+                    }
+                }
+                .onChange(of: searchQuery.applied) { _, _ in visibleCount = 50 }
                 .onChange(of: lessonFilter) { _, _ in visibleCount = 50 }
                 .onChange(of: historyDays) { _, _ in visibleCount = 50 }
                 if model.progress.sessions.isEmpty {
@@ -137,6 +145,16 @@ struct JournalView: View {
             }
             Button("Cancel", role: .cancel) { deleteSession = nil }
         }
+    }
+
+    /// The journal search for `text` with the lesson and date filters chosen now. The date
+    /// range ends with today, in the learner's calendar.
+    private func sessionSearch(for text: String) -> SessionSearch {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return SessionSearch(query: text, moduleID: lessonFilter == "all" ? nil : lessonFilter,
+                             since: historyDays > 0 ? calendar.date(byAdding: .day, value: 1 - historyDays, to: today) : nil,
+                             before: historyDays > 0 ? calendar.date(byAdding: .day, value: 1, to: today) : nil)
     }
 
     /// The minutes Stepper's action, or nil at either end so that arrow is disabled.
