@@ -40,8 +40,17 @@ enum LabUnloadChecks {
         /// The alerts answered since `count` alerts had been seen.
         func since(_ count: Int) -> [Seen] { Array(seen.dropFirst(count)) }
 
+        /// Leaves alerts unanswered until this many show at once, or until `holdsUntil`, as a
+        /// learner still reading one would while the page asks another question over it.
+        var holdsForAlerts = 0
+        var holdsUntil = Date.distantPast
         private weak var appeared: NSWindow?
         private func answer() {
+            if holdsForAlerts > 0 {
+                let shown = NSApp.windows.filter { $0 is NSPanel && $0.isVisible && $0.level == .modalPanel }.count
+                guard shown >= holdsForAlerts || Date() > holdsUntil else { return }
+                holdsForAlerts = 0
+            }
             guard let window = NSApp.modalWindow, let view = window.contentView else { return }
             // Answer on the next tick, once the alert has drawn, as a learner reads it first.
             guard appeared === window else { appeared = window; return }
@@ -178,6 +187,29 @@ enum LabUnloadChecks {
         try requireKept("A later departure")
         print("PASS leaving after the question proceeds, once")
 
+        // The page starts a second navigation while the learner is still reading the first
+        // question. WebKit replaces the first navigation, so leaving on its question, after
+        // staying on the second, leaves nothing, and must not approve the next departure.
+        var before = learner.seen.count
+        browser.loading = false
+        learner.holdsForAlerts = 2
+        learner.holdsUntil = Date().addingTimeInterval(8)
+        learner.answers = ["Stay on page", "Leave page"]
+        try later(webView, "location.href = '/privacy.html'; setTimeout(() => { location.href = '/resources/' }, 500)")
+        try wait("both questions to be answered", timeout: 15) { learner.answers.isEmpty }
+        settle(0.5)
+        try require(learner.since(before).map(\.pressed) == ["Stay on page", "Leave page"], "The page's second navigation did not ask over the first question")
+        try require(!browser.loading, "Leaving on a replaced navigation's question left the page")
+        try requireKept("A replaced navigation")
+        do {
+            result = try attempt("location.reload()", answers: ["Stay on page"])
+        } catch {
+            throw Failure("A later departure left without a question after an answer to a replaced navigation: \(error.localizedDescription)")
+        }
+        try require(result.alerts.count == 1 && !result.loaded, "A later departure reused an answer to a replaced navigation")
+        try requireKept("A later departure after a replaced navigation")
+        print("PASS an answer to a navigation the page replaced approves nothing later")
+
         result = try attempt("location.hash = 'git'", answers: [])
         try require(result.alerts.isEmpty && !result.loaded, "Another lab section asked before leaving")
         try require(webView.url?.fragment == "git", "Another lab section did not open")
@@ -190,7 +222,7 @@ enum LabUnloadChecks {
         try requireKept("The sandboxed runner frame")
         print("PASS lab sections, going back and the sandboxed runner frame keep the page without asking")
 
-        var before = learner.seen.count
+        before = learner.seen.count
         learner.answers = ["Cancel"]
         browser.loading = false
         browser.requestReload()

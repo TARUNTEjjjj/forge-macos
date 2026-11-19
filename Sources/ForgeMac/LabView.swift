@@ -143,6 +143,10 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
     /// /privacy.html to /privacy, or the reload that follows the toolbar's question, asks the
     /// policy again for the same departure, and the page shouldn't be asked twice.
     private var departureApproved = false
+    /// Counts the main-frame navigations the policy was asked about. A navigation that starts
+    /// while the learner is still answering for an earlier one replaces the earlier one in WebKit,
+    /// so an answer to the earlier question no longer approves anything.
+    private var mainFrameDecisions = 0
 
     /// Labs use the app's default website data store. The live unload check passes a
     /// non-persistent store, so it never touches the learner's lab storage.
@@ -316,6 +320,7 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if action.targetFrame?.isMainFrame != false { mainFrameDecisions += 1 }
         guard let url = action.request.url else { decisionHandler(.cancel); return }
         if action.shouldPerformDownload && (url.scheme == "blob" || url.scheme == "https") { decisionHandler(.download); return }
         guard Self.permitsFrame(url, isMainFrame: action.targetFrame?.isMainFrame != false) else {
@@ -330,8 +335,11 @@ final class LabBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDe
         }
         // The site's same-window links, such as Data & privacy, and its own location.reload()
         // or location changes, would replace the page and any work it holds only in memory.
+        let question = mainFrameDecisions
         confirmLeaving(.navigation) { [weak self] leave in
-            if leave { self?.departureApproved = true }
+            // WebKit ignores the answer for a navigation a later one replaced. Approving a
+            // departure it won't make would let the next one go without asking the page.
+            if leave, let self, self.mainFrameDecisions == question { self.departureApproved = true }
             decisionHandler(leave ? .allow : .cancel)
         }
     }
