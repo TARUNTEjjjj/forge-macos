@@ -796,13 +796,16 @@ extension NativeChecks {
         try require(model.update { $0.sessions = sessions }, "The search check could not save sessions")
         let titles = Dictionary(uniqueKeysWithValues: (model.curriculum?.modules ?? []).map { ($0.id, $0.title) })
         let queueSearch = SessionSearch(query: "queue")
-        let stale = model.prepareMatches(queueSearch)
+        // The search takes its copy of saved progress before it first waits, which the
+        // main actor lets it reach when this check yields.
+        let stale = Task { @MainActor in await model.prepareMatches(queueSearch) }
+        await Task.yield()
         try require(model.update { $0.sessions.append(StudySession(date: now.addingTimeInterval(60), minutes: 9, reflection: "New queue")) },
                     "The search check could not add a session")
         let staleKept = await stale.value
         try require(!staleKept && model.cachedMatches(queueSearch) == nil,
                     "A search of older saved progress was kept")
-        let kept = await model.prepareMatches(queueSearch).value
+        let kept = await model.prepareMatches(queueSearch)
         try require(kept, "A search of the saved progress wasn't kept")
         let expected = model.progress.filteredSessions(query: "queue", moduleTitles: titles)
         try require(model.cachedMatches(queueSearch)?.sessions == expected && expected.first?.reflection == "New queue"
@@ -810,15 +813,23 @@ extension NativeChecks {
                     "The background search found other sessions than the store")
         // Lesson and date filters apply to a background search as they do to the list.
         let filtered = SessionSearch(query: "graph", moduleID: "", since: now.addingTimeInterval(-86_400), before: now)
-        let filteredKept = await model.prepareMatches(filtered).value
+        let filteredKept = await model.prepareMatches(filtered)
         try require(filteredKept && model.cachedMatches(filtered)?.sessions == model.progress.filteredSessions(
                         query: "graph", moduleID: "", since: filtered.since, before: filtered.before, moduleTitles: titles),
                     "A background search ignored the lesson or date filter")
+        // Cancelling the caller (the journal's pending search, when the learner types on)
+        // stops the background search, which then keeps nothing.
+        let abandoned = SessionSearch(query: "invariant")
+        let caller = Task { @MainActor in await model.prepareMatches(abandoned) }
+        caller.cancel()
+        let abandonedKept = await caller.value
+        try require(!abandonedKept && model.cachedMatches(abandoned) == nil,
+                    "A cancelled journal search kept running and kept its sessions")
 
         // Typing in the journal applies the newest text once its sessions are kept, even when
         // saved progress changes while the search is pending.
         query = JournalSearchQuery(debounce: .milliseconds(10))
-        let prepare: @MainActor (String) async -> Bool = { await model.prepareMatches(SessionSearch(query: $0)).value }
+        let prepare: @MainActor (String) async -> Bool = { await model.prepareMatches(SessionSearch(query: $0)) }
         for text in ["w", "wa", "wal", "walk"] { query.type(text, prepare: prepare) }
         try require(model.update { $0.sessions.append(StudySession(date: now.addingTimeInterval(120), minutes: 7, reflection: "Late walk")) },
                     "The search check could not add a session")

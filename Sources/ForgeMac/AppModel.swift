@@ -291,18 +291,17 @@ final class AppModel: ObservableObject {
     }
 
     /// Finds `search`'s sessions away from the main actor and keeps them, so the journal can
-    /// then show them without searching while it draws. The returned task reports whether
-    /// they were kept: a search that finishes after saved progress changed is dropped, since
-    /// its sessions are out of date, and so is a cancelled one.
-    func prepareMatches(_ search: SessionSearch) -> Task<Bool, Never> {
-        if cachedMatches(search) != nil { return Task { true } }
+    /// then show them without searching while it draws. It reports whether they were kept: a
+    /// search that finishes after saved progress changed is dropped, since its sessions are
+    /// out of date. The search runs in the caller's task, so cancelling the caller (such as
+    /// the journal's pending search when the learner types on) stops it and keeps nothing.
+    func prepareMatches(_ search: SessionSearch) async -> Bool {
+        if cachedMatches(search) != nil { return true }
         let index = searchIndex, version = progressVersion
-        return Task { [weak self] in
-            guard let matches = await index.matchesInBackground(search), !Task.isCancelled,
-                  let self, self.progressVersion == version else { return false }
-            self.keep(matches, for: search)
-            return true
-        }
+        guard let matches = await index.matchesInBackground(search), !Task.isCancelled,
+              progressVersion == version else { return false }
+        keep(matches, for: search)
+        return true
     }
 
     /// The saved sessions sorted for searching, prepared once per saved progress.

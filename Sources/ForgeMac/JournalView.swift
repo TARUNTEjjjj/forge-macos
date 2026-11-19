@@ -106,7 +106,7 @@ struct JournalView: View {
                 .onChange(of: sessionSearch) { _, text in
                     visibleCount = 50
                     searchQuery.type(text, isReady: { model.cachedMatches(sessionSearch(for: $0)) != nil }) { text in
-                        await model.prepareMatches(sessionSearch(for: text)).value
+                        await model.prepareMatches(sessionSearch(for: text))
                     }
                 }
                 .onChange(of: searchQuery.applied) { _, _ in visibleCount = 50 }
