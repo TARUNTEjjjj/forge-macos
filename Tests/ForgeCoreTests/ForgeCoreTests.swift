@@ -43,4 +43,6 @@ final class ForgeCoreTests: XCTestCase {
     func testDailyTotalsHandleDaylightSavingTransitions() throws { try ForgeCoreChecks.run("testDailyTotalsHandleDaylightSavingTransitions") }
     func testDailyTotalsHandleMaximumSessionHistory() throws { try ForgeCoreChecks.run("testDailyTotalsHandleMaximumSessionHistory") }
     func testSessionSearchCombinesTermsLessonsAndDateBounds() throws { try ForgeCoreChecks.run("testSessionSearchCombinesTermsLessonsAndDateBounds") }
+    func testSessionSearchIndexMatchesFilteringAtTheHistoryLimit() throws { try ForgeCoreChecks.run("testSessionSearchIndexMatchesFilteringAtTheHistoryLimit") }
+    func testSessionSearchIndexStopsWhenCancelled() throws { try ForgeCoreChecks.run("testSessionSearchIndexStopsWhenCancelled") }
 }

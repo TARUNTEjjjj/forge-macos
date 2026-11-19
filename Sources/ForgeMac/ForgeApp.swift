@@ -10,6 +10,16 @@ enum ForgeLauncher {
                 print("Bundled curriculum: \(curriculum.modules.count) modules, \(curriculum.totalHours) hours")
             } else if CommandLine.arguments.contains("--check-native") {
                 try NativeChecks.run()
+                Task { @MainActor in
+                    do {
+                        try await NativeChecks.runJournalSearch()
+                        exit(0)
+                    } catch {
+                        fputs("Forge journal search check failed: \(error.localizedDescription)\n", stderr)
+                        exit(1)
+                    }
+                }
+                RunLoop.main.run()
             } else if CommandLine.arguments.contains("--check-resource-refresh") {
                 Task { @MainActor in
                     do {

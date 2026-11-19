@@ -41,7 +41,9 @@ public enum ForgeCoreChecks {
         "testDailyTotalsPreserveOrderAndTimezone",
         "testDailyTotalsHandleDaylightSavingTransitions",
         "testDailyTotalsHandleMaximumSessionHistory",
-        "testSessionSearchCombinesTermsLessonsAndDateBounds"
+        "testSessionSearchCombinesTermsLessonsAndDateBounds",
+        "testSessionSearchIndexMatchesFilteringAtTheHistoryLimit",
+        "testSessionSearchIndexStopsWhenCancelled"
 ]
 
     public static func run(_ name: String) throws {
@@ -88,6 +90,8 @@ public enum ForgeCoreChecks {
         case "testDailyTotalsHandleDaylightSavingTransitions": try cases.testDailyTotalsHandleDaylightSavingTransitions()
         case "testDailyTotalsHandleMaximumSessionHistory": try cases.testDailyTotalsHandleMaximumSessionHistory()
         case "testSessionSearchCombinesTermsLessonsAndDateBounds": try cases.testSessionSearchCombinesTermsLessonsAndDateBounds()
+        case "testSessionSearchIndexMatchesFilteringAtTheHistoryLimit": try cases.testSessionSearchIndexMatchesFilteringAtTheHistoryLimit()
+        case "testSessionSearchIndexStopsWhenCancelled": try cases.testSessionSearchIndexStopsWhenCancelled()
         default: throw CheckFailure(description: "Unknown check: \(name)")
         }
     }
@@ -770,6 +774,65 @@ private final class CoreCases {
         try XCTAssertEqual(snapshot.totalMinutes, 100)
     }
 
+    /// The full history the store accepts, searched through the index, finds exactly what
+    /// filtering every session and then sorting finds, for words, titles, lessons and dates.
+    func testSessionSearchIndexMatchesFilteringAtTheHistoryLimit() throws {
+        let start = Date(timeIntervalSince1970: 1_793_275_200)
+        let words = ["Queue", "invariant", "graph", "café", "naïve", "Straße", "proof", "heap", "BFS"]
+        let titles = ["f01": "Graphs and BFS", "f02": "Heaps and priority queues"]
+        let lessons: [String?] = [nil, "f01", "f02", "retired"]
+        let sessions = (0..<20_000).map { index in
+            // Several sessions share each date, so ties are ordered by ID.
+            StudySession(date: start.addingTimeInterval(Double(index % 4_000) * 600), minutes: 1 + index % 120,
+                         reflection: (0..<6).map { words[(index * 7 + $0 * 3) % words.count] }.joined(separator: " "),
+                         moduleID: lessons[index % lessons.count])
+        }
+        let snapshot = ProgressSnapshot(sessions: sessions)
+        try store.validate(snapshot)
+        // Filtering and sorting as `filteredSessions` did before the index.
+        func reference(_ search: SessionSearch) -> [StudySession] {
+            snapshot.sessions.filter { session in
+                if let moduleID = search.moduleID, (session.moduleID ?? "") != moduleID { return false }
+                if let since = search.since, session.date < since { return false }
+                if let before = search.before, session.date >= before { return false }
+                let text = session.reflection + " " + (session.moduleID.flatMap { titles[$0] } ?? "Independent practice")
+                return search.terms.allSatisfy { text.localizedStandardContains($0) }
+            }.sorted { $0.date == $1.date ? $0.id.uuidString < $1.id.uuidString : $0.date > $1.date }
+        }
+        let index = SessionSearchIndex(sessions: sessions, moduleTitles: titles)
+        let middle = start.addingTimeInterval(2_000 * 600)
+        let searches = [
+            SessionSearch(), SessionSearch(query: "q"), SessionSearch(query: "QUEUE  proof"), SessionSearch(query: "cafe"),
+            SessionSearch(query: "strasse"), SessionSearch(query: "priority"), SessionSearch(query: "independent heap"),
+            SessionSearch(query: "zzz"), SessionSearch(moduleID: ""), SessionSearch(query: "graph", moduleID: "f01"),
+            SessionSearch(query: "graph", moduleID: "retired"), SessionSearch(since: middle),
+            SessionSearch(query: "heap", since: middle, before: middle.addingTimeInterval(600)),
+            SessionSearch(before: start), SessionSearch(query: "proof", since: middle, before: middle),
+        ]
+        for search in searches {
+            let expected = reference(search)
+            let found = try XCTUnwrap(index.matches(search))
+            try XCTAssertEqual(found.sessions, expected)
+            try XCTAssertEqual(found.minutes, expected.reduce(0) { $0 + $1.minutes })
+            try XCTAssertEqual(snapshot.filteredSessions(query: search.query, moduleID: search.moduleID, since: search.since,
+                                                         before: search.before, moduleTitles: titles), expected)
+        }
+        try XCTAssertEqual(index.sessions.count, 20_000)
+        try XCTAssertEqual(snapshot.sessions, sessions)
+    }
+
+    /// A search abandoned for newer text stops and reports nothing instead of partial sessions.
+    func testSessionSearchIndexStopsWhenCancelled() throws {
+        let sessions = (0..<5_000).map { StudySession(date: Date(timeIntervalSince1970: Double($0)), minutes: 5, reflection: "Queue \($0)") }
+        let index = SessionSearchIndex(sessions: sessions)
+        try XCTAssertTrue(index.matches(SessionSearch(query: "queue")) { true } == nil)
+        let checks = Counter()
+        try XCTAssertTrue(index.matches(SessionSearch(query: "queue")) { checks.increment() > 2 } == nil)
+        try XCTAssertEqual(index.matches(SessionSearch(query: "queue"))?.sessions.count, 5_000)
+        // Listing every session involves no text search, so it is always complete.
+        try XCTAssertEqual(index.matches(SessionSearch()) { true }?.sessions.count, 5_000)
+    }
+
     private func jsonFields(_ data: Data) throws -> [String: Any] {
         try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
@@ -850,4 +913,11 @@ private func fetchCatalogFixture(_ data: Data, status: Int = 200, declaredSize: 
         throw CheckFailure(description: "Fixture catalog request exceeded its deadline")
     }
     return try box.get()
+}
+
+/// Counts calls from any thread.
+private final class Counter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    func increment() -> Int { lock.lock(); defer { lock.unlock() }; count += 1; return count }
 }
