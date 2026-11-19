@@ -17,6 +17,8 @@ jobs:
         run: scripts/test.sh
       - name: Native draft and navigation regression tests
         run: scripts/swift-command.sh run ForgeMac --check-native
+      - name: Labs unsaved-work guard in WebKit (local fixture page)
+        run: scripts/swift-command.sh run ForgeMac --check-lab-unload
       - name: Native automatic resource refresh and offline recovery tests
         run: scripts/swift-command.sh run ForgeMac --check-resource-refresh
       - name: Build and verify local debug app
