@@ -57,6 +57,9 @@ The website's learning progress, code drafts, and project exports use its web st
 That store is separate from native progress and can also be separate from Chrome.
 There is no implicit sync between these stores. The native app does not inject native
 notes into the web page or expose a shell, filesystem bridge, or GitHub credential.
+Before the labs page is reloaded, replaced or closed by quitting, the app dispatches the
+page's own `beforeunload` event and reads back only whether the page objects; it does not
+read the page's work or storage.
 
 ## Before App Store submission
 

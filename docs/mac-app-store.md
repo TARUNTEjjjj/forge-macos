@@ -49,6 +49,7 @@ provide additional utility, but approval remains Apple's decision.
 | Launch from a moved copy with original build folder unavailable | Release resource/native checks passed, 2026-11-04; debug GUI lesson navigation passed |
 | Backup export/import with malformed-file handling | Core + 4 native regression checks passed; full dialog QA pending |
 | Online Python in WebKit | Starter example execution verified; sandbox iframe navigation repaired |
+| Lab unsaved-work guard (public WebKit API only) | Fixture and live-site checks passed with denied and full website storage, 2026-11-19; alerts answered by the check, not by hand |
 | Git, project editing, export, and all twelve Python missions | Further release QA required |
 | Intel and Apple Silicon, offline, VoiceOver | Required release-device QA |
 | Privacy manifest and App Store privacy answers | Owner review required |

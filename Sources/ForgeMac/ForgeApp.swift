@@ -20,6 +20,11 @@ enum ForgeLauncher {
                     }
                 }
                 RunLoop.main.run()
+            } else if CommandLine.arguments.contains("--check-lab-unload") {
+                try LabUnloadChecks.run()
+            } else if CommandLine.arguments.contains("--check-lab-unload-live") {
+                // Uses the live labs site, so it needs internet and isn't part of CI.
+                try LabUnloadChecks.runLive()
             } else if CommandLine.arguments.contains("--check-resource-refresh") {
                 Task { @MainActor in
                     do {
@@ -105,16 +110,27 @@ final class ForgeLifecycle: NSObject, NSApplicationDelegate {
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let model else { return .terminateNow }
+        guard mayQuitWithNativeDrafts() else { return .terminateCancel }
+        // The labs page answers asynchronously, so quitting waits for it, and for the learner
+        // if it reports unsaved work. Logging out or restarting the Mac waits the same way.
+        guard let labs = LabWorkspace.opened, labs.hasPage else { return .terminateNow }
+        labs.confirmQuit { quit in sender.reply(toApplicationShouldTerminate: quit) }
+        return .terminateLater
+    }
+
+    /// Saves the native drafts that can be saved, and asks before quitting discards the rest.
+    /// False when the learner keeps working.
+    private func mayQuitWithNativeDrafts() -> Bool {
+        guard let model else { return true }
         let notesSaved = model.readOnly || model.flushNotes()
         let pendingJournal = model.focusDraft != model.progress.dailyFocus || !model.sessionReflectionDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        guard !notesSaved || pendingJournal else { return .terminateNow }
+        guard !notesSaved || pendingJournal else { return true }
         let alert = NSAlert()
         alert.messageText = "You have unsaved drafts"
         alert.informativeText = "Keep working to save your journal or shorten an oversized note. Quitting discards the unsaved drafts; your previously saved progress stays intact."
         alert.addButton(withTitle: "Keep working")
         alert.addButton(withTitle: "Quit without saving drafts")
-        return alert.runModal() == .alertFirstButtonReturn ? .terminateCancel : .terminateNow
+        return alert.runModal() != .alertFirstButtonReturn
     }
 }
 

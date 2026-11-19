@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import SwiftUI
+import WebKit
 import ForgeCore
 
 /// Headless regressions for the shared editor state; no user data is touched.
@@ -114,6 +115,30 @@ enum NativeChecks {
         try require(LabBrowser.opensInBrowser(newWindow: URL(string: "https://docs.python.org/3/")!), "A new-window link to another site stayed in the app")
         try require(!LabBrowser.opensInBrowser(newWindow: URL(string: "javascript:alert(1)")!), "A script new-window request was opened")
         print("PASS labs keep the page that is showing")
+
+        // The page is asked about unsaved work before anything replaces it, and only then:
+        // another section, going back to one, a frame inside the page such as the Python
+        // runner, or a page that stopped or never loaded leave nothing to ask.
+        let projects = URL(string: "\(LabBrowser.home)#projects")!
+        func leaves(_ target: String, _ type: WKNavigationType, mainFrame: Bool = true, shown: URL? = projects, broken: Bool = false) -> Bool {
+            LabBrowser.leavesPage(URL(string: target)!, shown: shown, type: type, isMainFrame: mainFrame, pageIsBroken: broken)
+        }
+        try require(leaves("\(LabBrowser.home)privacy.html", .linkActivated), "A same-window link left without asking")
+        try require(leaves("\(LabBrowser.home)resources/", .other), "A script navigation left without asking")
+        try require(leaves(projects.absoluteString, .reload), "A script reload left without asking")
+        try require(leaves(LabBrowser.home.absoluteString, .other), "Loading the lab document again left without asking")
+        try require(leaves("\(LabBrowser.home)privacy", .backForward), "Going back to another page left without asking")
+        try require(leaves("\(LabBrowser.home)privacy.html", .formSubmitted), "A form submission left without asking")
+        try require(!leaves("\(LabBrowser.home)#git", .linkActivated) && !leaves("\(LabBrowser.home)#git", .other), "Another lab section asked first")
+        try require(!leaves(LabBrowser.home.absoluteString, .backForward), "Going back to a lab section asked first")
+        try require(!leaves("about:srcdoc", .other, mainFrame: false), "The sandboxed Python runner frame asked first")
+        try require(!leaves("\(LabBrowser.home)privacy.html", .linkActivated, broken: true), "A stopped lab page asked first")
+        try require(!leaves(projects.absoluteString, .other, shown: nil), "A first load asked first")
+        // Quitting before any lab opened doesn't create a lab page to ask.
+        let quitting = ForgeLifecycle()
+        try require(LabWorkspace.opened == nil && quitting.applicationShouldTerminate(NSApplication.shared) == .terminateNow && LabWorkspace.opened == nil,
+                    "Quitting with no lab open waited or opened a lab")
+        print("PASS labs ask before a page replaces lab work, and only then")
 
         // WebKit stops a load with "Frame load interrupted" (WebKitErrorDomain 102) when the
         // app turns the response into a download or opens a redirect in the browser. Neither
@@ -332,7 +357,7 @@ enum NativeChecks {
         try require(journal.minutes(on: week) == journal.progress.minutes(on: week) && journal.minutes(on: [now]) == journal.progress.minutes(on: [now]),
                     "Daily totals missed a new session")
         print("PASS journal typing reuses history totals that new sessions replace")
-        print("16/16 native regression checks passed")
+        print("17/17 native regression checks passed")
     }
 }
 
