@@ -71,7 +71,7 @@ public struct SessionSearchIndex: Sendable {
     /// The sessions that match `search`, or nil when `isCancelled` reports true first.
     /// Long histories are matched on several cores, and cancellation is checked between
     /// blocks of sessions, so an abandoned search stops early.
-    public func matches(_ search: SessionSearch, isCancelled: () -> Bool = { false }) -> SessionMatches? {
+    public func matches(_ search: SessionSearch, isCancelled: @Sendable () -> Bool = { false }) -> SessionMatches? {
         let terms = search.terms
         let range = dateRange(since: search.since, before: search.before)
         if terms.isEmpty, search.moduleID == nil {
@@ -82,13 +82,13 @@ public struct SessionSearchIndex: Sendable {
         // `localizedStandardContains` with the current locale, fixed for this search: the
         // auto-updating current locale serializes concurrent searches, a fixed copy doesn't.
         let locale = Locale(identifier: Locale.current.identifier)
-        func contains(_ text: String, _ term: String) -> Bool {
+        @Sendable func contains(_ text: String, _ term: String) -> Bool {
             text.range(of: term, options: [.caseInsensitive, .diacriticInsensitive], locale: locale) != nil
         }
         // Whether each word is in each lesson title, found once per title.
         let titleHas = terms.map { term in titles.map { contains($0, term) } }
         let moduleID = search.moduleID
-        func isMatch(_ index: Int) -> Bool {
+        @Sendable func isMatch(_ index: Int) -> Bool {
             if let moduleID, lessonIDs[index] != moduleID { return false }
             let slot = titleSlots[index]
             for (word, term) in terms.enumerated() where !titleHas[word][slot] {
@@ -105,7 +105,7 @@ public struct SessionSearchIndex: Sendable {
         let parallel = !terms.isEmpty && blocks > 1
         found.withUnsafeMutableBufferPointer { results in
             let results = UnsafeSendable(results)
-            func work(_ block: Int) {
+            @Sendable func work(_ block: Int) {
                 if stopped.withLock({ $0 }) { return }
                 if isCancelled() { stopped.withLock { $0 = true }; return }
                 let start = range.lowerBound + block * blockSize
