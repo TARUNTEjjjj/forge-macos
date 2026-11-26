@@ -19,10 +19,62 @@ enum ForgeTheme {
 struct ForgeCard<Content: View>: View {
     var color: Color = ForgeTheme.panel
     @ViewBuilder var content: () -> Content
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ViewState private var pitch: Double = 0
+    @ViewState private var yaw: Double = 0
+    @ViewState private var isHovered = false
     var body: some View {
         content().padding(22).frame(maxWidth: .infinity, alignment: .leading)
             .background(color, in: RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.white.opacity(0.07)))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(isHovered && !reduceMotion ? 0.08 : 0.0),
+                                .clear,
+                                ForgeTheme.violet.opacity(isHovered && !reduceMotion ? 0.07 : 0.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .allowsHitTesting(false)
+            )
+            .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.white.opacity(isHovered ? 0.16 : 0.07)))
+            .rotation3DEffect(.degrees(reduceMotion ? 0 : pitch), axis: (x: 1, y: 0, z: 0), perspective: 0.55)
+            .rotation3DEffect(.degrees(reduceMotion ? 0 : yaw), axis: (x: 0, y: 1, z: 0), perspective: 0.55)
+            .scaleEffect(isHovered && !reduceMotion ? 1.01 : 1.0)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.78), value: pitch)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.78), value: isHovered)
+            .background(
+                GeometryReader { proxy in
+                    Color.clear
+                        .contentShape(RoundedRectangle(cornerRadius: 20))
+                        .onContinuousHover { phase in
+                            guard !reduceMotion else {
+                                isHovered = false
+                                pitch = 0
+                                yaw = 0
+                                return
+                            }
+                            switch phase {
+                            case .active(let loc):
+                                let w = max(1.0, proxy.size.width)
+                                let h = max(1.0, proxy.size.height)
+                                let nx = max(-1.0, min(1.0, (loc.x / w) * 2.0 - 1.0))
+                                let ny = max(-1.0, min(1.0, (loc.y / h) * 2.0 - 1.0))
+                                yaw = nx * 4.2
+                                pitch = -ny * 3.8
+                                isHovered = true
+                            case .ended:
+                                yaw = 0
+                                pitch = 0
+                                isHovered = false
+                            }
+                        }
+                }
+            )
     }
 }
 

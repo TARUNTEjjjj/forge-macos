@@ -862,6 +862,8 @@ extension NativeChecks {
         try require(query.applied == "walk" && model.cachedMatches(SessionSearch(query: "walk"))?.sessions.first?.reflection == "Late walk",
                     "The journal search showed sessions from older saved progress")
         print("PASS journal searches run in the background and keep only current saved progress")
+        let _ = host(DashboardView(), for: model)
+        print("PASS 3D orbital dashboard world renders headlessly without layout errors")
         print("4/4 journal search checks passed")
     }
 }

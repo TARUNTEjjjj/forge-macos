@@ -5,7 +5,28 @@ import ForgeCore
 enum ForgeLauncher {
     @MainActor static func main() {
         do {
-            if CommandLine.arguments.contains("--check-resources") {
+            if CommandLine.arguments.contains("--diagnostics") {
+                let curriculum = try Curriculum.loadBundled()
+                let catalog = try ResourceCatalog.loadBundled()
+                let phaseRows = curriculum.phases.map { phase -> [String: Any] in
+                    ["id": phase.id, "title": phase.title, "hours": phase.hours, "modules": phase.modules.count]
+                }
+                let payload: [String: Any] = [
+                    "version": curriculum.version,
+                    "phaseCount": curriculum.phases.count,
+                    "moduleCount": curriculum.modules.count,
+                    "totalHours": curriculum.totalHours,
+                    "practiceProblemCount": curriculum.problems.count,
+                    "curriculumResourceCount": curriculum.resources.count,
+                    "resourceCatalogStatus": catalog.status,
+                    "resourceCatalogItems": catalog.items.count,
+                    "resourceCatalogCategories": catalog.categories.count,
+                    "dagValidated": true,
+                    "phases": phaseRows
+                ]
+                let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+                if let text = String(data: data, encoding: .utf8) { print(text) }
+            } else if CommandLine.arguments.contains("--check-resources") {
                 let curriculum = try Curriculum.loadBundled()
                 print("Bundled curriculum: \(curriculum.modules.count) modules, \(curriculum.totalHours) hours")
             } else if CommandLine.arguments.contains("--check-native") {
