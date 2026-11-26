@@ -94,30 +94,120 @@ private struct Metric: View {
 private struct LearningWorld: View {
     let chapters: [ChapterStatus]
     let completed: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ViewState private var yawOffset: Double = 0
+    @ViewState private var pitchDegrees: Double = 24
+    @ViewState private var isDragging = false
+
+    private static let baseCoords: [(Double, Double, Double)] = [
+        (-0.82, -0.05, 0.56), (-0.48, 0.14, 0.26), (-0.12, -0.02, 0.52),
+        (0.24, 0.18, 0.18), (0.68, -0.04, 0.48), (0.78, 0.16, -0.34),
+        (0.38, 0.24, -0.62), (0.02, 0.06, -0.26), (-0.36, 0.22, -0.58), (-0.76, 0.12, -0.28)
+    ]
+
     var body: some View {
-        Canvas { context, size in
-            let positions: [(Double, Double)] = [(0.12,0.76),(0.28,0.59),(0.47,0.74),(0.64,0.55),(0.82,0.72),(0.87,0.35),(0.69,0.19),(0.50,0.37),(0.34,0.19),(0.13,0.34)]
-            let points = positions.map { CGPoint(x: size.width * $0.0, y: size.height * $0.1) }
-            var route = Path()
-            for (index, point) in points.enumerated() {
-                if index == 0 { route.move(to: point) } else { route.addLine(to: point) }
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion || isDragging)) { timeline in
+            let elapsed = reduceMotion ? 0.0 : timeline.date.timeIntervalSinceReferenceDate
+            let autoYaw = elapsed * 0.22 + yawOffset
+            let pulse = 0.5 + 0.5 * sin(elapsed * 2.4)
+            let pitchRad = (reduceMotion ? 24.0 : pitchDegrees) * .pi / 180.0
+
+            ZStack(alignment: .topTrailing) {
+                Canvas { context, size in
+                    let scale = min(size.width, size.height) * 0.37
+                    let cx = size.width * 0.5
+                    let cy = size.height * 0.52
+                    let cosY = cos(autoYaw)
+                    let sinY = sin(autoYaw)
+                    let cosP = cos(pitchRad)
+                    let sinP = sin(pitchRad)
+
+                    func project(_ p: (Double, Double, Double)) -> (pt: CGPoint, depth: Double) {
+                        let rx = p.0 * cosY - p.2 * sinY
+                        let rz = p.0 * sinY + p.2 * cosY
+                        let ry = p.1 * cosP - rz * sinP
+                        let depth = p.1 * sinP + rz * cosP + 3.2
+                        let persp = 3.1 / max(0.8, depth)
+                        return (CGPoint(x: cx + rx * scale * persp, y: cy - ry * scale * persp), depth)
+                    }
+
+                    // Orbital equatorial reference ring
+                    var orbit = Path()
+                    for step in 0...48 {
+                        let ang = (Double(step) / 48.0) * 2.0 * .pi
+                        let p = project((cos(ang) * 0.96, -0.14, sin(ang) * 0.72)).pt
+                        if step == 0 { orbit.move(to: p) } else { orbit.addLine(to: p) }
+                    }
+                    context.stroke(orbit, with: .color(.white.opacity(0.09)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+
+                    let projected = Self.baseCoords.enumerated().map { idx, coord -> (idx: Int, center: CGPoint, depth: Double, top: [CGPoint], bot: [CGPoint]) in
+                        let c = project(coord)
+                        let hw = 0.13, hh = 0.11
+                        let tPts = [(-hw, 0.0, -hh), (hw, 0.0, -hh), (hw, 0.0, hh), (-hw, 0.0, hh)].map { d in
+                            project((coord.0 + d.0, coord.1 + d.1, coord.2 + d.2)).pt
+                        }
+                        let bPts = [(-hw, -0.11, -hh), (hw, -0.11, -hh), (hw, -0.11, hh), (-hw, -0.11, hh)].map { d in
+                            project((coord.0 + d.0, coord.1 + d.1, coord.2 + d.2)).pt
+                        }
+                        return (idx, c.pt, c.depth, tPts, bPts)
+                    }
+
+                    // 3D learning route spline
+                    var route = Path()
+                    for (idx, item) in projected.enumerated() {
+                        if idx == 0 { route.move(to: item.center) } else { route.addLine(to: item.center) }
+                    }
+                    context.stroke(route, with: .color(ForgeTheme.violet.opacity(0.45)),
+                                   style: StrokeStyle(lineWidth: 1.5, dash: [5, 5], dashPhase: reduceMotion ? 0 : -elapsed * 18))
+
+                    // Painter-sorted 3D extruded isometric chapter prisms
+                    for item in projected.sorted(by: { $0.depth > $1.depth }) {
+                        let status = chapters.indices.contains(item.idx) ? chapters[item.idx] : .upcoming
+                        let accent = status == .complete ? ForgeTheme.mint : (status == .current ? ForgeTheme.red : ForgeTheme.violet)
+
+                        var front = Path()
+                        front.addLines([item.top[3], item.top[2], item.bot[2], item.bot[3]])
+                        front.closeSubpath()
+                        var side = Path()
+                        side.addLines([item.top[2], item.top[1], item.bot[1], item.bot[2]])
+                        side.closeSubpath()
+                        var cap = Path()
+                        cap.addLines(item.top)
+                        cap.closeSubpath()
+
+                        context.fill(front, with: .color(accent.opacity(0.28)))
+                        context.fill(side, with: .color(accent.opacity(0.48)))
+                        context.fill(cap, with: .color(accent.opacity(status == .current ? (0.78 + 0.2 * pulse) : (status == .complete ? 0.85 : 0.56))))
+                        context.stroke(cap, with: .color(.white.opacity(status == .current ? 0.85 : 0.25)), lineWidth: 1)
+
+                        context.draw(
+                            Text(String(format: "%02d", item.idx + 1))
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(ForgeTheme.ink),
+                            at: CGPoint(x: item.center.x, y: item.center.y + 22)
+                        )
+                    }
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 2)
+                        .onChanged { val in
+                            isDragging = true
+                            yawOffset = val.translation.width * 0.012
+                            pitchDegrees = max(8.0, min(52.0, 24.0 + val.translation.height * 0.14))
+                        }
+                        .onEnded { _ in
+                            isDragging = false
+                        }
+                )
+                .accessibilityLabel("Interactive 3D constellation of ten chapters in the learning path. \(completed) module\(completed == 1 ? "" : "s") reviewed.")
+
+                Text(reduceMotion ? "3D STATIC" : "3D ORBIT · DRAG")
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundStyle(ForgeTheme.mint)
+                    .padding(.horizontal, 7).padding(.vertical, 3)
+                    .background(.black.opacity(0.35), in: Capsule())
+                    .overlay(Capsule().strokeBorder(.white.opacity(0.14)))
             }
-            context.stroke(route, with: .color(ForgeTheme.violet.opacity(0.3)), style: StrokeStyle(lineWidth: 1, dash: [4,5]))
-            for (index, point) in points.enumerated() {
-                let width = min(25.0, size.width / 16)
-                let height = 13.0
-                let top = [CGPoint(x:point.x,y:point.y-height), CGPoint(x:point.x+width,y:point.y), CGPoint(x:point.x,y:point.y+height), CGPoint(x:point.x-width,y:point.y)]
-                let lower = top.map { CGPoint(x:$0.x,y:$0.y+17) }
-                var left = Path(); left.addLines([top[3],top[2],lower[2],lower[3]]); left.closeSubpath()
-                var right = Path(); right.addLines([top[2],top[1],lower[1],lower[2]]); right.closeSubpath()
-                var tile = Path(); tile.addLines(top); tile.closeSubpath()
-                let status = chapters.indices.contains(index) ? chapters[index] : .upcoming
-                let color = status == .upcoming ? ForgeTheme.violet : ForgeTheme.red
-                context.fill(left, with: .color(color.opacity(0.2)))
-                context.fill(right, with: .color(color.opacity(0.4)))
-                context.fill(tile, with: .color(color.opacity(status == .current ? 1 : 0.55)))
-                context.draw(Text(String(format:"%02d",index+1)).font(.system(size:9,weight:.bold,design:.monospaced)).foregroundColor(ForgeTheme.ink), at: CGPoint(x:point.x,y:point.y+39))
-            }
-        }.accessibilityLabel("Ten chapters in the learning path. \(completed) module\(completed == 1 ? "" : "s") reviewed.")
+        }
     }
 }

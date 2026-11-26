@@ -43,7 +43,8 @@ public enum ForgeCoreChecks {
         "testDailyTotalsHandleMaximumSessionHistory",
         "testSessionSearchCombinesTermsLessonsAndDateBounds",
         "testSessionSearchIndexMatchesFilteringAtTheHistoryLimit",
-        "testSessionSearchIndexStopsWhenCancelled"
+        "testSessionSearchIndexStopsWhenCancelled",
+        "testPropertyBasedJournalAndSearchOracle"
 ]
 
     public static func run(_ name: String) throws {
@@ -92,6 +93,7 @@ public enum ForgeCoreChecks {
         case "testSessionSearchCombinesTermsLessonsAndDateBounds": try cases.testSessionSearchCombinesTermsLessonsAndDateBounds()
         case "testSessionSearchIndexMatchesFilteringAtTheHistoryLimit": try cases.testSessionSearchIndexMatchesFilteringAtTheHistoryLimit()
         case "testSessionSearchIndexStopsWhenCancelled": try cases.testSessionSearchIndexStopsWhenCancelled()
+        case "testPropertyBasedJournalAndSearchOracle": try cases.testPropertyBasedJournalAndSearchOracle()
         default: throw CheckFailure(description: "Unknown check: \(name)")
         }
     }
@@ -831,6 +833,53 @@ private final class CoreCases {
         try XCTAssertEqual(index.matches(SessionSearch(query: "queue"))?.sessions.count, 5_000)
         // Listing every session involves no text search, so it is always complete.
         try XCTAssertEqual(index.matches(SessionSearch()) { true }?.sessions.count, 5_000)
+    }
+
+    /// Property-based fuzz oracle across random study histories, search filters, and snapshot round-trips.
+    func testPropertyBasedJournalAndSearchOracle() throws {
+        var rng: UInt64 = 0xF029E20261126
+        func nextU64() -> UInt64 {
+            rng &+= 0x9e3779b97f4a7c15
+            var z = rng
+            z = (z ^ (z >> 30)) &* 0xbf58476d1ce4e5b9
+            z = (z ^ (z >> 27)) &* 0x94d049bb133111eb
+            return z ^ (z >> 31)
+        }
+
+        let vocab = ["invariant", "Queue", "café", "BFS", "graph", "Dynamic", "hash", "Proof"]
+        let titles = ["m01": "Graphs and Trees", "m02": "Dynamic Programming"]
+        let modules: [String?] = [nil, "m01", "m02", "retired"]
+        let anchor = Date(timeIntervalSince1970: 1_794_000_000)
+
+        for trial in 0..<24 {
+            let count = 40 + Int(nextU64() % 180)
+            let sessions = (0..<count).map { _ in
+                let offset = Double(Int(nextU64() % 10_000) - 5_000) * 120.0
+                let mins = 1 + Int(nextU64() % 90)
+                let w1 = vocab[Int(nextU64() % UInt64(vocab.count))]
+                let w2 = vocab[Int(nextU64() % UInt64(vocab.count))]
+                let mod = modules[Int(nextU64() % UInt64(modules.count))]
+                return StudySession(date: anchor.addingTimeInterval(offset), minutes: mins, reflection: "\(w1) \(w2) trial\(trial)", moduleID: mod)
+            }
+            let snapshot = ProgressSnapshot(completedModuleIDs: ["m01"], notes: ["m01": "invariant"], dailyFocus: "oracle", sessions: sessions)
+            let data = try JSONEncoder().encode(snapshot)
+            let decoded = try JSONDecoder().decode(ProgressSnapshot.self, from: data)
+            try XCTAssertEqual(decoded.sessions, snapshot.sessions)
+
+            let index = SessionSearchIndex(sessions: decoded.sessions, moduleTitles: titles)
+            for _ in 0..<8 {
+                let q = (nextU64() % 2 == 0) ? "\(vocab[Int(nextU64() % UInt64(vocab.count))])" : "cafe trees"
+                let modFilter: String? = (nextU64() % 3 == 0) ? modules[Int(nextU64() % UInt64(modules.count))] ?? "" : nil
+                let since = (nextU64() % 2 == 0) ? anchor.addingTimeInterval(-100_000) : nil
+                let before = (nextU64() % 2 == 0) ? anchor.addingTimeInterval(100_000) : nil
+                let query = SessionSearch(query: q, moduleID: modFilter, since: since, before: before)
+
+                let indexed = try XCTUnwrap(index.matches(query))
+                let direct = decoded.filteredSessions(query: q, moduleID: modFilter, since: since, before: before, moduleTitles: titles)
+                try XCTAssertEqual(indexed.sessions, direct)
+                try XCTAssertEqual(indexed.minutes, direct.reduce(0) { $0 + $1.minutes })
+            }
+        }
     }
 
     private func jsonFields(_ data: Data) throws -> [String: Any] {
