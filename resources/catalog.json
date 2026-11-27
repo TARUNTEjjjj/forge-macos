@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "project": "forge-macos",
   "title": "Forge native learning library",
-  "fetchedAt": "2026-11-26T13:04:12.043Z",
-  "attemptedAt": "2026-11-26T13:03:52.807Z",
+  "fetchedAt": "2026-11-27T13:00:42.912Z",
+  "attemptedAt": "2026-11-27T13:00:23.073Z",
   "status": "live",
   "errors": [],
   "excludedSeeds": [],
@@ -42,13 +42,13 @@
         "react",
         "teachers"
       ],
-      "stars": 459666,
-      "forks": 47388,
-      "pushedAt": "2026-11-26T06:57:36.000Z",
+      "stars": 459699,
+      "forks": 47393,
+      "pushedAt": "2026-11-27T12:00:14.000Z",
       "license": "BSD-3-Clause",
       "category": "programming",
       "sourceQuery": "repo:freeCodeCamp/freeCodeCamp",
-      "fetchedAt": "2026-11-26T13:03:57.251Z",
+      "fetchedAt": "2026-11-27T13:00:27.690Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
@@ -56,7 +56,7 @@
         "repo:freeCodeCamp/freeCodeCamp"
       ],
       "score": 68.31,
-      "reason": "Programming foundations resource; 459666 GitHub stars."
+      "reason": "Programming foundations resource; 459699 GitHub stars."
     },
     {
       "id": 14440270,
@@ -78,20 +78,20 @@
         "training-materials",
         "training-providers"
       ],
-      "stars": 184851,
+      "stars": 184841,
       "forks": 33296,
       "pushedAt": "2026-10-31T16:14:40.000Z",
       "license": null,
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 65.67,
-      "reason": "Programming foundations resource; 184851 GitHub stars."
+      "score": 65.65,
+      "reason": "Programming foundations resource; 184841 GitHub stars."
     },
     {
       "id": 112507086,
@@ -113,20 +113,20 @@
         "programming",
         "snippets"
       ],
-      "stars": 129620,
-      "forks": 12500,
+      "stars": 129623,
+      "forks": 12499,
       "pushedAt": "2026-11-17T00:53:28.000Z",
       "license": "CC-BY-4.0",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 65.31,
-      "reason": "Programming foundations resource; 129620 GitHub stars."
+      "score": 65.28,
+      "reason": "Programming foundations resource; 129623 GitHub stars."
     },
     {
       "id": 260800773,
@@ -148,20 +148,20 @@
         "replit",
         "study"
       ],
-      "stars": 5994,
+      "stars": 5993,
       "forks": 596,
       "pushedAt": "2026-11-15T00:07:11.000Z",
       "license": "MIT",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 58.58,
-      "reason": "Programming foundations resource; 5994 GitHub stars."
+      "score": 58.56,
+      "reason": "Programming foundations resource; 5993 GitHub stars."
     },
     {
       "id": 21016984,
@@ -185,13 +185,13 @@
       "license": "Apache-2.0",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 55.18,
+      "score": 55.15,
       "reason": "Programming foundations resource; 1271 GitHub stars."
     },
     {
@@ -227,13 +227,13 @@
       "license": "GPL-3.0",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 54.61,
+      "score": 54.58,
       "reason": "Programming foundations resource; 857 GitHub stars."
     },
     {
@@ -247,17 +247,17 @@
       ],
       "stars": 553,
       "forks": 99,
-      "pushedAt": "2026-11-25T12:38:20.000Z",
+      "pushedAt": "2026-11-27T03:45:07.000Z",
       "license": "AGPL-3.0",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 53.69,
+      "score": 53.71,
       "reason": "Programming foundations resource; 553 GitHub stars."
     },
     {
@@ -290,13 +290,13 @@
       "license": null,
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 53.59,
+      "score": 53.58,
       "reason": "Programming foundations resource; 1880 GitHub stars."
     },
     {
@@ -329,13 +329,13 @@
       "license": "Apache-2.0",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 53.24,
+      "score": 53.22,
       "reason": "Programming foundations resource; 1048 GitHub stars."
     },
     {
@@ -355,13 +355,13 @@
       "license": null,
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 52.7,
+      "score": 52.68,
       "reason": "Programming foundations resource; 631 GitHub stars."
     },
     {
@@ -378,20 +378,20 @@
         "learn-to-code",
         "programming"
       ],
-      "stars": 6947,
+      "stars": 6948,
       "forks": 618,
       "pushedAt": "2019-06-12T04:27:34.000Z",
       "license": null,
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
       "score": 50.39,
-      "reason": "Programming foundations resource; 6947 GitHub stars."
+      "reason": "Programming foundations resource; 6948 GitHub stars."
     },
     {
       "id": 273429955,
@@ -415,13 +415,13 @@
       "license": "MIT",
       "category": "programming",
       "sourceQuery": "topic:learn-to-code",
-      "fetchedAt": "2026-11-26T13:03:54.805Z",
+      "fetchedAt": "2026-11-27T13:00:25.261Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:learn-to-code"
       ],
-      "score": 50.15,
+      "score": 50.14,
       "reason": "Programming foundations resource; 937 GitHub stars."
     },
     {
@@ -449,20 +449,20 @@
         "software-architect-roadmap",
         "vue-roadmap"
       ],
-      "stars": 372812,
-      "forks": 45414,
-      "pushedAt": "2026-11-26T09:39:47.000Z",
+      "stars": 372870,
+      "forks": 45456,
+      "pushedAt": "2026-11-27T09:28:25.000Z",
       "license": null,
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
       "score": 77.85,
-      "reason": "Computer science pathways resource; 372812 GitHub stars."
+      "reason": "Computer science pathways resource; 372870 GitHub stars."
     },
     {
       "id": 60493101,
@@ -483,20 +483,20 @@
         "software-engineering",
         "study-plan"
       ],
-      "stars": 365088,
-      "forks": 85253,
+      "stars": 365129,
+      "forks": 85271,
       "pushedAt": "2026-11-07T16:03:02.000Z",
       "license": "CC-BY-SA-4.0",
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 77.32,
-      "reason": "Computer science pathways resource; 365088 GitHub stars."
+      "score": 77.3,
+      "reason": "Computer science pathways resource; 365129 GitHub stars."
     },
     {
       "id": 121395510,
@@ -513,20 +513,20 @@
         "python",
         "system-design"
       ],
-      "stars": 186602,
-      "forks": 50581,
+      "stars": 186605,
+      "forks": 50583,
       "pushedAt": "2026-11-23T06:22:57.000Z",
       "license": null,
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 76.27,
-      "reason": "Computer science pathways resource; 186602 GitHub stars."
+      "score": 76.24,
+      "reason": "Computer science pathways resource; 186605 GitHub stars."
     },
     {
       "id": 19415064,
@@ -539,21 +539,21 @@
         "courses",
         "curriculum"
       ],
-      "stars": 211585,
-      "forks": 26163,
+      "stars": 211615,
+      "forks": 26160,
       "pushedAt": "2026-11-09T06:27:27.000Z",
       "license": "MIT",
       "category": "cs",
       "sourceQuery": "repo:ossu/computer-science",
-      "fetchedAt": "2026-11-26T13:04:09.628Z",
+      "fetchedAt": "2026-11-27T13:00:40.504Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science",
         "repo:ossu/computer-science"
       ],
-      "score": 76.18,
-      "reason": "Computer science pathways resource; 211585 GitHub stars."
+      "score": 76.15,
+      "reason": "Computer science pathways resource; 211615 GitHub stars."
     },
     {
       "id": 241576270,
@@ -570,20 +570,20 @@
         "kmp",
         "leetcode"
       ],
-      "stars": 136100,
-      "forks": 23496,
+      "stars": 136103,
+      "forks": 23498,
       "pushedAt": "2026-10-18T11:43:51.000Z",
       "license": null,
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 74.7,
-      "reason": "Computer science pathways resource; 136100 GitHub stars."
+      "score": 74.68,
+      "reason": "Computer science pathways resource; 136103 GitHub stars."
     },
     {
       "id": 71583602,
@@ -610,20 +610,20 @@
         "systems",
         "web-development"
       ],
-      "stars": 84994,
-      "forks": 11665,
+      "stars": 85002,
+      "forks": 11672,
       "pushedAt": "2026-11-24T17:13:22.000Z",
       "license": null,
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 74.6,
-      "reason": "Computer science pathways resource; 84994 GitHub stars."
+      "score": 74.57,
+      "reason": "Computer science pathways resource; 85002 GitHub stars."
     },
     {
       "id": 15204860,
@@ -639,20 +639,20 @@
         "read-papers",
         "theory"
       ],
-      "stars": 111877,
-      "forks": 6478,
+      "stars": 111911,
+      "forks": 6479,
       "pushedAt": "2026-10-28T23:10:37.000Z",
       "license": null,
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 74.52,
-      "reason": "Computer science pathways resource; 111877 GitHub stars."
+      "score": 74.49,
+      "reason": "Computer science pathways resource; 111911 GitHub stars."
     },
     {
       "id": 126577260,
@@ -669,20 +669,20 @@
         "javascript",
         "javascript-algorithms"
       ],
-      "stars": 196769,
-      "forks": 30947,
+      "stars": 196763,
+      "forks": 30946,
       "pushedAt": "2026-07-26T02:43:08.000Z",
       "license": "MIT",
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 73.94,
-      "reason": "Computer science pathways resource; 196769 GitHub stars."
+      "score": 73.93,
+      "reason": "Computer science pathways resource; 196763 GitHub stars."
     },
     {
       "id": 127407957,
@@ -707,17 +707,17 @@
       ],
       "stars": 55703,
       "forks": 9327,
-      "pushedAt": "2026-11-24T11:12:48.000Z",
+      "pushedAt": "2026-11-26T14:31:32.000Z",
       "license": null,
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 73.67,
+      "score": 73.7,
       "reason": "Computer science pathways resource; 55703 GitHub stars."
     },
     {
@@ -740,20 +740,58 @@
         "scalability",
         "software-engineering"
       ],
-      "stars": 51706,
+      "stars": 51708,
       "forks": 4035,
       "pushedAt": "2026-11-25T10:22:23.000Z",
       "license": "MIT",
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 73.54,
-      "reason": "Computer science pathways resource; 51706 GitHub stars."
+      "score": 73.51,
+      "reason": "Computer science pathways resource; 51708 GitHub stars."
+    },
+    {
+      "id": 63477612,
+      "fullName": "TheAlgorithms/C-Plus-Plus",
+      "url": "https://github.com/TheAlgorithms/C-Plus-Plus",
+      "description": "Collection of various algorithms in mathematics, machine learning, computer science and physics implemented in C++ for educational purposes.",
+      "topics": [
+        "algorithm",
+        "algorithm-competitions",
+        "algorithms-implemented",
+        "artificial-intelligence-algorithms",
+        "computer-science",
+        "cpp",
+        "data-structures",
+        "educational",
+        "instructor-materials",
+        "interview-preparation",
+        "interview-questions",
+        "machine-learning",
+        "machine-learning-algorithms",
+        "mathematics",
+        "search",
+        "sort"
+      ],
+      "stars": 34926,
+      "forks": 7911,
+      "pushedAt": "2026-11-27T12:38:52.000Z",
+      "license": "MIT",
+      "category": "cs",
+      "sourceQuery": "topic:computer-science",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
+      "provenance": "github",
+      "stale": false,
+      "sourceQueries": [
+        "topic:computer-science"
+      ],
+      "score": 72.72,
+      "reason": "Computer science pathways resource; 34926 GitHub stars."
     },
     {
       "id": 179613976,
@@ -767,52 +805,20 @@
         "course-project",
         "tsinghua-university"
       ],
-      "stars": 38137,
+      "stars": 38140,
       "forks": 7852,
       "pushedAt": "2026-11-15T17:41:28.000Z",
       "license": "CC-BY-SA-4.0",
       "category": "cs",
       "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
+      "fetchedAt": "2026-11-27T13:00:38.101Z",
       "provenance": "github",
       "stale": false,
       "sourceQueries": [
         "topic:computer-science"
       ],
-      "score": 72.62,
-      "reason": "Computer science pathways resource; 38137 GitHub stars."
-    },
-    {
-      "id": 709589487,
-      "fullName": "ashishps1/awesome-system-design-resources",
-      "url": "https://github.com/ashishps1/awesome-system-design-resources",
-      "description": "Learn System Design concepts and prepare for interviews using free resources.",
-      "topics": [
-        "awesome",
-        "backend",
-        "computer-science",
-        "distributed-systems",
-        "high-level-design",
-        "hld",
-        "interview",
-        "interview-questions",
-        "scalability",
-        "system-design"
-      ],
-      "stars": 43600,
-      "forks": 8991,
-      "pushedAt": "2026-11-01T09:36:12.000Z",
-      "license": "GPL-3.0",
-      "category": "cs",
-      "sourceQuery": "topic:computer-science",
-      "fetchedAt": "2026-11-26T13:04:07.193Z",
-      "provenance": "github",
-      "stale": false,
-      "sourceQueries": [
-        "topic:computer-science"
-      ],
-      "score": 72.55,
-      "reason": "Computer science pathways resource; 43600 GitHub stars."
+      "score": 72.59,
+      "reason": "Computer science pathways resource; 38140 GitHub stars."
     }
   ]
 }
